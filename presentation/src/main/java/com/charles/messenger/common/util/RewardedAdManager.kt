@@ -37,6 +37,11 @@ class RewardedAdManager @Inject constructor(
      * Load a rewarded ad
      */
     fun loadAd(activity: Activity) {
+        if (AD_UNIT_ID.isBlank()) {
+            Timber.w("Rewarded ad unit ID is blank, skipping load")
+            adLoadedSubject.onNext(false)
+            return
+        }
         if (rewardedAd != null || isLoading) {
             Timber.d("Skipping rewarded ad load - already loaded or loading")
             adLoadedSubject.onNext(rewardedAd != null)

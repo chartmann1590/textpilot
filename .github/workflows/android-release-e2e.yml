@@ -1,0 +1,96 @@
+name: Android Release E2E
+
+on:
+  push:
+    branches:
+      - "**"
+
+permissions:
+  contents: write
+
+jobs:
+  build-test-release:
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      CI_VERSION_CODE: ${{ github.run_number }}
+      keystore_password: ${{ secrets.STORE_PASSWORD }}
+      key_alias: ${{ secrets.KEY_ALIAS }}
+      key_password: ${{ secrets.KEY_PASSWORD }}
+      ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+      ADMOB_BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
+      ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
+      ADMOB_REWARDED_ID: ${{ secrets.ADMOB_REWARDED_ID }}
+      ADMOB_NATIVE_ADVANCED_ID: ${{ secrets.ADMOB_NATIVE_ADVANCED_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Ensure local.properties and signing files
+        shell: bash
+        run: |
+          cat > local.properties <<EOF
+          sdk.dir=${ANDROID_SDK_ROOT}
+          ADMOB_APP_ID=${ADMOB_APP_ID}
+          ADMOB_BANNER_ID=${ADMOB_BANNER_ID}
+          ADMOB_INTERSTITIAL_ID=${ADMOB_INTERSTITIAL_ID}
+          ADMOB_REWARDED_ID=${ADMOB_REWARDED_ID}
+          ADMOB_NATIVE_ADVANCED_ID=${ADMOB_NATIVE_ADVANCED_ID}
+          STORE_FILE=../keystore
+          STORE_PASSWORD=${keystore_password}
+          KEY_ALIAS=${key_alias}
+          KEY_PASSWORD=${key_password}
+          EOF
+
+          echo "${{ secrets.STORE_FILE_B64 }}" | base64 -d > keystore
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_B64 }}" | base64 -d > presentation/google-services.json
+
+      - name: Build release artifacts
+        run: ./gradlew :presentation:assembleWithAnalyticsRelease :presentation:bundleWithAnalyticsRelease --stacktrace
+
+      - name: Run instrumentation tests on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_8
+          disable-animations: true
+          script: ./gradlew :presentation:connectedWithAnalyticsDebugAndroidTest --stacktrace
+
+      - name: Upload APK and AAB artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: withanalytics-release-artifacts-${{ github.sha }}
+          path: |
+            presentation/build/outputs/apk/withAnalytics/release/*.apk
+            presentation/build/outputs/bundle/withAnalyticsRelease/*.aab
+
+      - name: Build release tag metadata
+        id: release_meta
+        shell: bash
+        run: |
+          BRANCH="${GITHUB_REF_NAME//\//-}"
+          SHORT_SHA="${GITHUB_SHA::12}"
+          echo "tag=ci-${BRANCH}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "name=CI Release ${GITHUB_REF_NAME} ${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update CI GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.release_meta.outputs.tag }}
+          name: ${{ steps.release_meta.outputs.name }}
+          allowUpdates: true
+          removeArtifacts: true
+          prerelease: true
+          artifactErrorsFailBuild: true
+          artifacts: |
+            presentation/build/outputs/apk/withAnalytics/release/*.apk
+            presentation/build/outputs/bundle/withAnalyticsRelease/*.aab

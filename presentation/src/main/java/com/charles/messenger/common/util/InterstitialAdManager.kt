@@ -26,7 +26,7 @@ class InterstitialAdManager @Inject constructor(
 
     companion object {
         private const val AD_UNIT_ID = BuildConfig.ADMOB_INTERSTITIAL_ID
-        private const val SHOW_PROBABILITY = 0.3 // 30% chance to show ad
+        private const val SHOW_PROBABILITY = 1.0 // Always show when ready for ad-supported users
     }
 
     private var interstitialAd: InterstitialAd? = null
@@ -44,6 +44,10 @@ class InterstitialAdManager @Inject constructor(
      * Preload an interstitial ad
      */
     fun loadAd(activity: Activity) {
+        if (AD_UNIT_ID.isBlank()) {
+            Timber.w("Interstitial ad unit ID is blank, skipping load")
+            return
+        }
         // #region agent log
         com.charles.messenger.util.DebugLogger.log(
             location = "InterstitialAdManager.kt:45",
@@ -121,6 +125,10 @@ class InterstitialAdManager @Inject constructor(
      * Returns true if ad was shown, false otherwise
      */
     fun maybeShowAd(activity: Activity): Boolean {
+        if (AD_UNIT_ID.isBlank()) {
+            Timber.w("Interstitial ad unit ID is blank, skipping show")
+            return false
+        }
         // #region agent log
         com.charles.messenger.util.DebugLogger.log(
             location = "InterstitialAdManager.kt:90",

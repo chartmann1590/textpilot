@@ -24,23 +24,23 @@ import android.content.Intent
 import android.os.Build
 import android.provider.Telephony
 import androidx.annotation.RequiresApi
-import com.charles.messenger.interactor.SyncMessages
 import com.charles.messenger.util.Preferences
 import dagger.android.AndroidInjection
+import timber.log.Timber
 import javax.inject.Inject
 
 class DefaultSmsChangedReceiver : BroadcastReceiver() {
 
     @Inject lateinit var prefs: Preferences
-    @Inject lateinit var syncMessages: SyncMessages
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onReceive(context: Context, intent: Intent) {
         AndroidInjection.inject(this, context)
 
         if (intent.getBooleanExtra(Telephony.Sms.Intents.EXTRA_IS_DEFAULT_SMS_APP, false)) {
-            val pendingResult = goAsync()
-            syncMessages.execute(Unit) { pendingResult.finish() }
+            // Presentation-layer sync service is not accessible from the data module.
+            // Full sync will run from app lifecycle/sync entry points.
+            Timber.d("Default SMS app set; waiting for presentation sync trigger")
         }
     }
 

@@ -27,6 +27,7 @@ import android.view.View
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.iterator
+import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import com.charles.messenger.R
 import com.charles.messenger.common.util.Colors
@@ -51,6 +52,7 @@ import io.reactivex.rxkotlin.Observables
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.Subject
 import java.util.concurrent.TimeUnit
+import java.util.WeakHashMap
 import javax.inject.Inject
 
 /**
@@ -60,6 +62,16 @@ import javax.inject.Inject
  * an activity does not depend on the theme
  */
 abstract class QkThemedActivity : QkActivity() {
+    private data class InitialPadding(
+        val left: Int,
+        val top: Int,
+        val right: Int,
+        val bottom: Int
+    )
+
+    companion object {
+        private val initialPaddingCache = WeakHashMap<View, InitialPadding>()
+    }
 
     @Inject lateinit var billingManager: BillingManager
     @Inject lateinit var colors: Colors
@@ -278,36 +290,68 @@ abstract class QkThemedActivity : QkActivity() {
         rootView?.let { root ->
             ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
                 val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                
-                // Try to find common content view IDs used across activities
-                // Check for DrawerLayout first (MainActivity), then other patterns
-                val contentView = when {
-                    // MainActivity: DrawerLayout contains mainContent ConstraintLayout
-                    root.findViewById<View>(R.id.drawerLayout) != null -> {
-                        root.findViewById<View>(R.id.drawerLayout)?.findViewById<View>(R.id.mainContent)
-                    }
-                    // Container activities: LinearLayout with containerContent
-                    root.findViewById<View>(R.id.containerContent) != null -> {
-                        root.findViewById<View>(R.id.containerContent)
-                    }
-                    // ComposeActivity: ConstraintLayout with contentView
-                    root.findViewById<View>(R.id.contentView) != null -> {
-                        root.findViewById<View>(R.id.contentView)
-                    }
-                    // Fall back to root view
-                    else -> root
-                }
-                
-                contentView?.setPadding(
-                    systemBars.left,
-                    systemBars.top,
-                    systemBars.right,
-                    systemBars.bottom
+
+                // Keep the main content clear of status/navigation bars.
+                val contentView = root.findViewById<View>(R.id.mainContent)
+                    ?: root.findViewById(R.id.containerContent)
+                    ?: root.findViewById(R.id.contentView)
+                    ?: root
+                contentView.updatePadding(
+                    left = contentView.initialPadding().left + systemBars.left,
+                    top = contentView.initialPadding().top + systemBars.top,
+                    right = contentView.initialPadding().right + systemBars.right,
+                    bottom = contentView.initialPadding().bottom
                 )
-                
+
+                // Ensure bottom pinned ad containers stay above gesture/navigation bar.
+                val adContainer = root.findViewById<View>(R.id.adContainer)
+                adContainer?.let { view ->
+                    val initial = view.initialPadding()
+                    view.updatePadding(
+                        left = initial.left + systemBars.left,
+                        right = initial.right + systemBars.right,
+                        bottom = initial.bottom + systemBars.bottom
+                    )
+                }
+                val adView = root.findViewById<View>(R.id.adView)
+                adView?.let { view ->
+                    val initial = view.initialPadding()
+                    view.updatePadding(
+                        left = initial.left + systemBars.left,
+                        right = initial.right + systemBars.right,
+                        bottom = initial.bottom + systemBars.bottom
+                    )
+                }
+
+                // Ensure scrolled content remains reachable above the bottom bar/ads.
+                root.findViewById<View>(R.id.recyclerView)?.let { view ->
+                    view.updatePadding(bottom = view.initialPadding().bottom + systemBars.bottom)
+                }
+                root.findViewById<View>(R.id.messageList)?.let { view ->
+                    view.updatePadding(bottom = view.initialPadding().bottom + systemBars.bottom)
+                }
+                root.findViewById<View>(R.id.container)?.let { view ->
+                    view.updatePadding(bottom = view.initialPadding().bottom + systemBars.bottom)
+                }
+
                 insets
             }
+            ViewCompat.requestApplyInsets(root)
         }
+    }
+
+    private fun View.initialPadding(): InitialPadding {
+        val cached = initialPaddingCache[this]
+        if (cached != null) return cached
+
+        val initial = InitialPadding(
+            left = paddingLeft,
+            top = paddingTop,
+            right = paddingRight,
+            bottom = paddingBottom
+        )
+        initialPaddingCache[this] = initial
+        return initial
     }
 
 }

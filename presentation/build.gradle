@@ -32,6 +32,10 @@ android {
         localProperties.load(new FileInputStream(localPropertiesFile))
     }
 
+    def ciVersionCodeProp = project.findProperty("ciVersionCode")
+    def ciVersionCodeEnv = System.getenv("CI_VERSION_CODE")
+    def resolvedCiVersionCode = (ciVersionCodeProp ?: ciVersionCodeEnv)?.toString()?.trim()
+
     defaultConfig {
 
         configurations.all {
@@ -41,20 +45,28 @@ android {
         applicationId "com.charles.messenger.v2"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 2229
+        versionCode resolvedCiVersionCode?.isInteger() ? resolvedCiVersionCode.toInteger() : 2229
         versionName "3.10.2"
         setProperty("archivesBaseName", "messenger-v${versionName}")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        multiDexKeepProguard file('multidex-config.pro')
 
         setProperty("archivesBaseName", "messenger-v${versionName}")
 
         // Use test ad IDs for debug builds, production IDs for release
-        buildConfigField "String", "ADMOB_INTERSTITIAL_ID", "\"" + localProperties['ADMOB_INTERSTITIAL_ID'] + "\""
-        buildConfigField "String", "ADMOB_REWARDED_ID", "\"" + localProperties['ADMOB_REWARDED_ID'] + "\""
+        def admobInterstitialId = localProperties.getProperty('ADMOB_INTERSTITIAL_ID', System.getenv("ADMOB_INTERSTITIAL_ID") ?: '')
+        def admobRewardedId = localProperties.getProperty('ADMOB_REWARDED_ID', System.getenv("ADMOB_REWARDED_ID") ?: '')
+        def admobBannerId = localProperties.getProperty('ADMOB_BANNER_ID', System.getenv("ADMOB_BANNER_ID") ?: '')
+        def admobNativeAdvancedId = localProperties.getProperty('ADMOB_NATIVE_ADVANCED_ID', System.getenv("ADMOB_NATIVE_ADVANCED_ID") ?: '')
+        def admobAppId = localProperties.getProperty('ADMOB_APP_ID', System.getenv("ADMOB_APP_ID") ?: '')
+
+        buildConfigField "String", "ADMOB_INTERSTITIAL_ID", "\"" + admobInterstitialId + "\""
+        buildConfigField "String", "ADMOB_REWARDED_ID", "\"" + admobRewardedId + "\""
         buildConfigField "Boolean", "USE_TEST_ADS", "false"
-        resValue "string", "admob_banner_id", localProperties['ADMOB_BANNER_ID']
-        manifestPlaceholders = [ADMOB_APP_ID: localProperties['ADMOB_APP_ID']]
+        resValue "string", "admob_banner_id", "\"" + admobBannerId + "\""
+        resValue "string", "admob_native_advanced_id", "\"" + admobNativeAdvancedId + "\""
+        manifestPlaceholders = [ADMOB_APP_ID: admobAppId]
     }
 
     signingConfigs {
@@ -68,6 +80,7 @@ android {
             buildConfigField "String", "ADMOB_INTERSTITIAL_ID", "\"ca-app-pub-3940256099942544/1033173712\""
             buildConfigField "String", "ADMOB_REWARDED_ID", "\"ca-app-pub-3940256099942544/5224354917\""
             resValue "string", "admob_banner_id", "ca-app-pub-3940256099942544/6300978111"
+            resValue "string", "admob_native_advanced_id", "ca-app-pub-3940256099942544/2247696110"
             manifestPlaceholders = [ADMOB_APP_ID: "ca-app-pub-3940256099942544~3347511713"]
         }
         release {
