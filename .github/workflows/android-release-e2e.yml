@@ -63,7 +63,7 @@ jobs:
           arch: x86_64
           emulator-boot-timeout: 900
           disable-animations: false
-          script: ./gradlew :presentation:connectedWithAnalyticsDebugAndroidTest --stacktrace
+          script: ./gradlew :presentation:connectedNoAnalyticsDebugAndroidTest --stacktrace
 
       - name: Upload APK and AAB artifacts
         uses: actions/upload-artifact@v4
