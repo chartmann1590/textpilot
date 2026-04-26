@@ -66,12 +66,12 @@ jobs:
           script: |
             adb wait-for-device
             adb shell getprop sys.boot_completed || true
-            ./gradlew :presentation:connectedNoAnalyticsDebugAndroidTest --stacktrace || (
+            if ! ./gradlew :presentation:connectedNoAnalyticsDebugAndroidTest --stacktrace; then
               adb kill-server || true
               adb start-server
               adb wait-for-device
               ./gradlew :presentation:connectedNoAnalyticsDebugAndroidTest --stacktrace
-            )
+            fi
 
       - name: Upload APK and AAB artifacts
         uses: actions/upload-artifact@v4
