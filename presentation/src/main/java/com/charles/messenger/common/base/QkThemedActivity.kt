@@ -304,7 +304,7 @@ abstract class QkThemedActivity : QkActivity() {
                 )
 
                 // Ensure bottom pinned ad containers stay above gesture/navigation bar.
-                val adContainer = root.findViewById<View>(R.id.adContainer)
+                val adContainer = root.findViewById<View>(resolveId("adContainer"))
                 adContainer?.let { view ->
                     val initial = view.initialPadding()
                     view.updatePadding(
@@ -352,6 +352,10 @@ abstract class QkThemedActivity : QkActivity() {
         )
         initialPaddingCache[this] = initial
         return initial
+    }
+
+    private fun resolveId(name: String): Int {
+        return resources.getIdentifier(name, "id", packageName)
     }
 
 }
