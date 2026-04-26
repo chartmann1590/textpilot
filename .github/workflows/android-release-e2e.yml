@@ -63,15 +63,7 @@ jobs:
           arch: x86_64
           emulator-boot-timeout: 900
           disable-animations: false
-          script: |
-            adb wait-for-device
-            adb shell getprop sys.boot_completed || true
-            if ! ./gradlew :presentation:connectedNoAnalyticsDebugAndroidTest --stacktrace; then
-              adb kill-server || true
-              adb start-server
-              adb wait-for-device
-              ./gradlew :presentation:connectedNoAnalyticsDebugAndroidTest --stacktrace
-            fi
+          script: adb wait-for-device && adb shell getprop sys.boot_completed || true; ./gradlew :presentation:connectedNoAnalyticsDebugAndroidTest --stacktrace || (adb kill-server || true; adb start-server; adb wait-for-device; ./gradlew :presentation:connectedNoAnalyticsDebugAndroidTest --stacktrace)
 
       - name: Upload APK and AAB artifacts
         uses: actions/upload-artifact@v4
