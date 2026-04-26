@@ -18,14 +18,19 @@
  */
 package com.charles.messenger.feature.settings.ai
 
-import com.charles.messenger.model.OllamaModel
+import com.charles.messenger.model.AiModelOption
+import com.charles.messenger.model.AiProvider
 
 data class AiSettingsState(
     val aiEnabled: Boolean = false,
+    val provider: AiProvider = AiProvider.OLLAMA,
     val ollamaUrl: String = "",
-    val selectedModel: String = "",
-    val availableModels: List<OllamaModel> = emptyList(),
+    val ollamaModel: String = "",
+    val onDeviceModelName: String = "",
+    val onDeviceModelPath: String = "",
+    val availableModels: List<AiModelOption> = emptyList(),
     val loadingModels: Boolean = false,
+    val installStatus: String = "",
     val connectionStatus: ConnectionStatus = ConnectionStatus.Unknown,
     val autoReplyToAll: Boolean = false,
     val persona: String = "",

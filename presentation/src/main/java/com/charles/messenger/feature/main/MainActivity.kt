@@ -60,6 +60,7 @@ import com.charles.messenger.manager.ChangelogManager
 import com.charles.messenger.repository.SyncRepository
 import com.charles.messenger.common.util.AnalyticsInitializer
 import com.charles.messenger.common.util.InterstitialAdManager
+import com.charles.messenger.common.util.NativeAdController
 import com.jakewharton.rxbinding2.widget.textChanges
 import com.uber.autodispose.android.lifecycle.scope
 import com.uber.autodispose.autoDisposable
@@ -133,6 +134,7 @@ class MainActivity : QkThemedActivity(), MainView {
     private val progressAnimator by lazy { ObjectAnimator.ofInt(syncingBinding?.syncingProgress, "progress", 0, 0) }
     private val changelogDialog by lazy { ChangelogDialog(this) }
     private val backPressedSubject: Subject<NavItem> = PublishSubject.create()
+    private lateinit var nativeAdController: NativeAdController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
@@ -140,6 +142,7 @@ class MainActivity : QkThemedActivity(), MainView {
         binding = MainActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
         drawerBinding = DrawerViewBinding.bind(binding.drawer.root)
+        nativeAdController = NativeAdController(this)
         
         // Window insets are handled by base class setupWindowInsets() in onPostCreate
         // MainActivity's DrawerLayout with mainContent is automatically handled
@@ -149,6 +152,16 @@ class MainActivity : QkThemedActivity(), MainView {
 
         // Preload interstitial ad
         interstitialAdManager.loadAd(this)
+        billingManager.upgradeStatus
+            .take(1)
+            .autoDisposable(scope())
+            .subscribe { upgraded ->
+                if (!upgraded) {
+                    nativeAdController.loadInto(binding.nativeAdContainer)
+                } else {
+                    binding.nativeAdContainer.isVisible = false
+                }
+            }
         analyticsInitializer.init(this)
 
         (binding.snackbar as? ViewStub)?.setOnInflateListener { _, inflated ->
@@ -390,6 +403,7 @@ class MainActivity : QkThemedActivity(), MainView {
     }
 
     override fun onDestroy() {
+        nativeAdController.destroy()
         super.onDestroy()
         disposables.dispose()
     }

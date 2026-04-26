@@ -231,7 +231,7 @@ class QkReplyViewModel @Inject constructor(
         // Handle smart reply button clicks
         view.smartReplyIntent
                 .filter { prefs.aiReplyEnabled.get() }
-                .filter { prefs.ollamaModel.get().isNotEmpty() }
+                .filter { prefs.hasConfiguredAiBackend() }
                 .doOnNext {
                     newState { copy(loadingSuggestions = true, showingSuggestions = false) }
                 }
@@ -350,8 +350,10 @@ class QkReplyViewModel @Inject constructor(
                     val persona = prefs.aiPersona.get().takeIf { it.isNotEmpty() }
                     generateSmartReplies.buildObservable(
                         GenerateSmartReplies.Params(
+                            provider = prefs.currentAiProvider(),
                             baseUrl = prefs.ollamaApiUrl.get(),
-                            model = prefs.ollamaModel.get(),
+                            model = prefs.currentAiModel(),
+                            onDeviceModelPath = prefs.onDeviceModelPath.get(),
                             messages = recentMessages,
                             persona = persona
                         )

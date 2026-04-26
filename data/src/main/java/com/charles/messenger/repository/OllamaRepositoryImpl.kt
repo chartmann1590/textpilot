@@ -18,6 +18,8 @@
  */
 package com.charles.messenger.repository
 
+import com.charles.messenger.model.AiModelInstallUpdate
+import com.charles.messenger.model.AiModelOption
 import com.charles.messenger.model.Message
 import com.charles.messenger.model.OllamaChatMessage
 import com.charles.messenger.model.OllamaChatRequest
@@ -26,7 +28,9 @@ import com.charles.messenger.model.OllamaGenerateRequest
 import com.charles.messenger.model.OllamaGenerateResponse
 import com.charles.messenger.model.OllamaModel
 import com.charles.messenger.model.OllamaModelsResponse
+import com.charles.messenger.util.AiPromptFormatter
 import com.squareup.moshi.Moshi
+import io.reactivex.Observable
 import io.reactivex.Single
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -46,9 +50,23 @@ class OllamaRepositoryImpl @Inject constructor(
 
     companion object {
         private const val TAGS_ENDPOINT = "/api/tags"
+        private const val PULL_ENDPOINT = "/api/pull"
         private const val GENERATE_ENDPOINT = "/api/generate"
         private const val CHAT_ENDPOINT = "/api/chat"
         private const val JSON_MEDIA_TYPE = "application/json; charset=utf-8"
+
+        private val recommendedModels = listOf(
+            AiModelOption(
+                id = "gemma4:latest",
+                displayName = "Gemma 4",
+                summary = "Tap to download from Ollama"
+            ),
+            AiModelOption(
+                id = "qwen2.5-coder:latest",
+                displayName = "Qwen 2.5 Coder",
+                summary = "Tap to download from Ollama"
+            )
+        )
     }
 
     override fun getAvailableModels(baseUrl: String): Single<List<OllamaModel>> {
@@ -130,18 +148,97 @@ class OllamaRepositoryImpl @Inject constructor(
                 Timber.e(e, "Error fetching models")
                 throw e
             }
-        }.onErrorResumeNext { error ->
-            // Convert expected network errors to empty list instead of propagating as exceptions
-            when (error) {
-                is java.net.SocketException,
-                is java.net.SocketTimeoutException,
-                is android.system.ErrnoException,
-                is java.net.UnknownHostException -> {
-                    Timber.d("Network error handled gracefully, returning empty list")
-                    Single.just(emptyList())
+        }
+    }
+
+    override fun getManagedModels(baseUrl: String): Single<List<AiModelOption>> {
+        return getAvailableModels(baseUrl)
+            .onErrorReturnItem(emptyList())
+            .map { installedModels ->
+                val installedNames = installedModels.map { it.name }.toSet()
+
+                val curated = recommendedModels.map { model ->
+                    if (model.id in installedNames) {
+                        model.copy(installed = true, summary = "Installed on server")
+                    } else {
+                        model
+                    }
                 }
-                else -> Single.error(error)
+
+                val extras = installedModels
+                    .map { it.name }
+                    .filterNot { modelName -> curated.any { it.id == modelName } }
+                    .map { modelName ->
+                        AiModelOption(
+                            id = modelName,
+                            displayName = modelName,
+                            summary = "Installed on server",
+                            installed = true
+                        )
+                    }
+
+                curated + extras
             }
+    }
+
+    override fun pullModel(
+        baseUrl: String,
+        model: String
+    ): Observable<AiModelInstallUpdate> {
+        return Observable.create { emitter ->
+            val url = "${baseUrl.trimEnd('/')}$PULL_ENDPOINT"
+            val body = JSONObject()
+                .put("model", model)
+                .put("stream", true)
+                .toString()
+
+            val request = Request.Builder()
+                .url(url)
+                .post(body.toRequestBody(JSON_MEDIA_TYPE.toMediaType()))
+                .build()
+
+            emitter.onNext(AiModelInstallUpdate(modelId = model, status = "Downloading $model from Ollama..."))
+
+            okHttpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    throw IllegalStateException("Failed to download model: ${response.code} ${response.message}")
+                }
+
+                val source = response.body?.source()
+                    ?: throw IllegalStateException("Failed to download model: empty response")
+
+                while (!source.exhausted()) {
+                    val line = source.readUtf8Line()?.trim().orEmpty()
+                    if (line.isBlank()) continue
+
+                    val update = JSONObject(line)
+                    val status = update.optString("status").ifBlank { "Downloading $model..." }
+                    val total = update.optLong("total", -1L)
+                    val completed = update.optLong("completed", -1L)
+
+                    val message = if (total > 0 && completed >= 0) {
+                        val percent = ((completed * 100) / total).toInt().coerceIn(0, 100)
+                        "$status ($percent%)"
+                    } else {
+                        status
+                    }
+
+                    val done = status.equals("success", ignoreCase = true)
+                    emitter.onNext(
+                        AiModelInstallUpdate(
+                            modelId = model,
+                            status = if (done) "$model downloaded" else message,
+                            complete = done
+                        )
+                    )
+
+                    if (done) {
+                        break
+                    }
+                }
+            }
+
+            emitter.onComplete()
         }
     }
 
@@ -183,7 +280,7 @@ class OllamaRepositoryImpl @Inject constructor(
                 }
 
                 // Build messages for chat API with system message for strict instructions
-                val messages = buildChatMessages(conversationContext, persona)
+                val messages = AiPromptFormatter.buildChatMessages(conversationContext, persona)
                 Timber.d("Chat messages count: ${messages.size}")
                 messages.forEachIndexed { index, msg ->
                     Timber.d("Message $index (${msg.role}): ${msg.content.take(100)}...")
@@ -228,7 +325,7 @@ class OllamaRepositoryImpl @Inject constructor(
                 // #endregion
 
                 // Parse the response into multiple suggestions
-                val suggestions = parseReplySuggestions(responseText)
+                val suggestions = AiPromptFormatter.parseReplySuggestions(responseText)
                 Timber.d("Generated ${suggestions.size} suggestions: $suggestions")
 
                 suggestions

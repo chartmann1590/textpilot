@@ -234,4 +234,7 @@ class AppModule(private var application: Application) {
     @Provides
     fun provideOllamaRepository(repository: com.charles.messenger.repository.OllamaRepositoryImpl): com.charles.messenger.repository.OllamaRepository = repository
 
+    @Provides
+    fun provideOnDeviceLlmRepository(repository: com.charles.messenger.repository.OnDeviceLlmRepositoryImpl): com.charles.messenger.repository.OnDeviceLlmRepository = repository
+
 }

@@ -1,0 +1,5 @@
+-keep class com.charles.messenger.common.QKApplication { *; }
+-keep class com.charles.messenger.feature.main.MainActivity { *; }
+-keep class androidx.core.app.CoreComponentFactory { *; }
+-keep class androidx.core.app.AppComponentFactory { *; }
+-keep class dagger.android.** { *; }

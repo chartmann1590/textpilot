@@ -718,7 +718,7 @@ class ComposeViewModel @Inject constructor(
         // Handle smart reply button clicks
         view.smartReplyIntent
                 .filter { prefs.aiReplyEnabled.get() }
-                .filter { prefs.ollamaModel.get().isNotEmpty() }
+                .filter { prefs.hasConfiguredAiBackend() }
                 .doOnNext {
                     // #region agent log
                     try {
@@ -730,7 +730,8 @@ class ComposeViewModel @Inject constructor(
                             put("message", "Smart reply button clicked")
                             put("data", org.json.JSONObject().apply {
                                 put("aiReplyEnabled", prefs.aiReplyEnabled.get())
-                                put("ollamaModel", prefs.ollamaModel.get())
+                                put("aiProvider", prefs.currentAiProvider().value)
+                                put("aiModel", prefs.currentAiModel())
                             })
                             put("sessionId", "debug-session")
                             put("runId", "run1")
@@ -879,8 +880,10 @@ class ComposeViewModel @Inject constructor(
                     // #endregion
                     generateSmartReplies.buildObservable(
                         com.charles.messenger.interactor.GenerateSmartReplies.Params(
+                            provider = prefs.currentAiProvider(),
                             baseUrl = prefs.ollamaApiUrl.get(),
-                            model = prefs.ollamaModel.get(),
+                            model = prefs.currentAiModel(),
+                            onDeviceModelPath = prefs.onDeviceModelPath.get(),
                             messages = recentMessages,
                             persona = persona
                         )

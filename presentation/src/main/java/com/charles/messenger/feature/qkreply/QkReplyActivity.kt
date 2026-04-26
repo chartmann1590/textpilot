@@ -123,7 +123,7 @@ class QkReplyActivity : QkThemedActivity(), QkReplyView {
 
         // Auto-trigger smart reply if opened from notification action
         val triggerSmartReply = intent.getBooleanExtra("triggerSmartReply", false)
-        if (triggerSmartReply && prefs.aiReplyEnabled.get() && prefs.ollamaModel.get().isNotEmpty()) {
+        if (triggerSmartReply && prefs.aiReplyEnabled.get() && prefs.hasConfiguredAiBackend()) {
             // Delay slightly to ensure view is fully initialized
             smartReply.postDelayed({
                 smartReply.performClick()

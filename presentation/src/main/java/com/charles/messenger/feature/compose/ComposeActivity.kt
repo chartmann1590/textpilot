@@ -309,12 +309,12 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
                 val navigationBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
                 
                 // Apply system bar padding (top, left, right only)
-                // Bottom padding is handled by keyboard listener, but we need to account for navigation bar
+                // Bottom padding is adjusted dynamically by the keyboard listener.
                 contentView.setPadding(
                     systemBars.left,
                     systemBars.top,
                     systemBars.right,
-                    0 // Bottom padding handled by keyboard listener
+                    navigationBar.bottom
                 )
                 
                 // Position adView above navigation bar by setting bottom margin
@@ -389,11 +389,13 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
                 } else if (!isKeyboardVisible && lastKeyboardHeight > 0) {
                     // Keyboard is hidden - remove padding
                     lastKeyboardHeight = 0
+                    val navigationBarHeight = ViewCompat.getRootWindowInsets(rootView)
+                        ?.getInsets(WindowInsetsCompat.Type.navigationBars())?.bottom ?: 0
                     contentView.setPadding(
                         contentView.paddingLeft,
                         contentView.paddingTop,
                         contentView.paddingRight,
-                        0
+                        navigationBarHeight
                     )
                 }
             }

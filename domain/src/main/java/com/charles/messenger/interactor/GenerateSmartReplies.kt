@@ -18,8 +18,10 @@
  */
 package com.charles.messenger.interactor
 
+import com.charles.messenger.model.AiProvider
 import com.charles.messenger.model.Message
 import com.charles.messenger.repository.OllamaRepository
+import com.charles.messenger.repository.OnDeviceLlmRepository
 import io.reactivex.Flowable
 import javax.inject.Inject
 
@@ -27,22 +29,38 @@ import javax.inject.Inject
  * Generate smart reply suggestions using AI
  */
 class GenerateSmartReplies @Inject constructor(
-    private val ollamaRepository: OllamaRepository
+    private val ollamaRepository: OllamaRepository,
+    private val onDeviceLlmRepository: OnDeviceLlmRepository
 ) : Interactor<GenerateSmartReplies.Params>() {
 
     data class Params(
+        val provider: AiProvider,
         val baseUrl: String,
         val model: String,
+        val onDeviceModelPath: String = "",
         val messages: List<Message>,
         val persona: String? = null
     )
 
     override fun buildObservable(params: Params): Flowable<List<String>> {
-        return ollamaRepository.generateReplySuggestions(
-            baseUrl = params.baseUrl,
-            model = params.model,
-            conversationContext = params.messages,
-            persona = params.persona
-        ).toFlowable()
+        return when (params.provider) {
+            AiProvider.OLLAMA -> {
+                ollamaRepository.generateReplySuggestions(
+                    baseUrl = params.baseUrl,
+                    model = params.model,
+                    conversationContext = params.messages,
+                    persona = params.persona
+                ).toFlowable()
+            }
+
+            AiProvider.ON_DEVICE -> {
+                onDeviceLlmRepository.generateReplySuggestions(
+                    modelPath = params.onDeviceModelPath,
+                    modelName = params.model,
+                    conversationContext = params.messages,
+                    persona = params.persona
+                ).toFlowable()
+            }
+        }
     }
 }

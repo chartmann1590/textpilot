@@ -25,7 +25,10 @@ import android.provider.Settings
 import com.f2prateek.rx.preferences2.Preference
 import com.f2prateek.rx.preferences2.RxSharedPreferences
 import com.charles.messenger.common.util.extensions.versionCode
+import com.charles.messenger.model.AiBackendConfig
+import com.charles.messenger.model.AiProvider
 import io.reactivex.Observable
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -125,8 +128,11 @@ class Preferences @Inject constructor(
 
     // AI Reply preferences
     val aiReplyEnabled = rxPrefs.getBoolean("aiReplyEnabled", false)
+    val aiProvider = rxPrefs.getString("aiProvider", AiProvider.OLLAMA.value)
     val ollamaApiUrl = rxPrefs.getString("ollamaApiUrl", "http://localhost:11434")
     val ollamaModel = rxPrefs.getString("ollamaModel", "")
+    val onDeviceModelName = rxPrefs.getString("onDeviceModelName", "")
+    val onDeviceModelPath = rxPrefs.getString("onDeviceModelPath", "")
     val aiAutoReplyToAll = rxPrefs.getBoolean("aiAutoReplyToAll", false)
     val aiAutoReplyCount = rxPrefs.getInteger("aiAutoReplyCount", 0)
     val aiPersona = rxPrefs.getString("aiPersona", "")
@@ -253,4 +259,30 @@ class Preferences @Inject constructor(
             else -> rxPrefs.getString("ringtone_$threadId", default.get())
         }
     }
+
+    fun currentAiProvider(): AiProvider = AiProvider.fromPreference(aiProvider.get())
+
+    fun currentAiModel(): String {
+        return when (currentAiProvider()) {
+            AiProvider.OLLAMA -> ollamaModel.get()
+            AiProvider.ON_DEVICE -> onDeviceModelName.get().ifBlank {
+                onDeviceModelPath.get().takeIf { it.isNotBlank() }
+                    ?.let(::File)
+                    ?.nameWithoutExtension
+                    .orEmpty()
+            }
+        }
+    }
+
+    fun currentAiBackendConfig(): AiBackendConfig {
+        return AiBackendConfig(
+            provider = currentAiProvider(),
+            ollamaBaseUrl = ollamaApiUrl.get(),
+            ollamaModel = ollamaModel.get(),
+            onDeviceModelName = onDeviceModelName.get(),
+            onDeviceModelPath = onDeviceModelPath.get()
+        )
+    }
+
+    fun hasConfiguredAiBackend(): Boolean = currentAiBackendConfig().isConfigured()
 }

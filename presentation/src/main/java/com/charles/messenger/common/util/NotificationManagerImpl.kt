@@ -334,22 +334,23 @@ class NotificationManagerImpl @Inject constructor(
         val aiAutoReplyToAll = prefs.aiAutoReplyToAll.get()
         val aiReplyEnabled = prefs.aiReplyEnabled.get()
         val qkreply = prefs.qkreply.get()
-        val ollamaModel = prefs.ollamaModel.get()
+        val aiModel = prefs.currentAiModel()
+        val hasConfiguredAiBackend = prefs.hasConfiguredAiBackend()
         // #region agent log
         try {
-            android.util.Log.d("DEBUG_HYP_B", "Checking QK popup conditions: threadId=$threadId, aiAutoReplyToAll=$aiAutoReplyToAll, aiReplyEnabled=$aiReplyEnabled, qkreply=$qkreply, ollamaModel=$ollamaModel")
+            android.util.Log.d("DEBUG_HYP_B", "Checking QK popup conditions: threadId=$threadId, aiAutoReplyToAll=$aiAutoReplyToAll, aiReplyEnabled=$aiReplyEnabled, qkreply=$qkreply, aiModel=$aiModel")
             val logFile = java.io.File(context.getExternalFilesDir(null), "debug.log")
             logFile.parentFile?.mkdirs()
-            val logEntry = """{"timestamp":${System.currentTimeMillis()},"location":"NotificationManagerImpl.kt:320","message":"Checking QK popup conditions","data":{"threadId":$threadId,"aiAutoReplyToAll":$aiAutoReplyToAll,"aiReplyEnabled":$aiReplyEnabled,"qkreply":$qkreply,"ollamaModel":"$ollamaModel"},"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}""" + "\n"
+            val logEntry = """{"timestamp":${System.currentTimeMillis()},"location":"NotificationManagerImpl.kt:320","message":"Checking QK popup conditions","data":{"threadId":$threadId,"aiAutoReplyToAll":$aiAutoReplyToAll,"aiReplyEnabled":$aiReplyEnabled,"qkreply":$qkreply,"aiModel":"$aiModel"},"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}""" + "\n"
             java.io.FileWriter(logFile, true).use { it.append(logEntry) }
-            Timber.d("QK Popup check: aiAutoReplyToAll=$aiAutoReplyToAll, aiReplyEnabled=$aiReplyEnabled, qkreply=$qkreply, ollamaModel=$ollamaModel")
+            Timber.d("QK Popup check: aiAutoReplyToAll=$aiAutoReplyToAll, aiReplyEnabled=$aiReplyEnabled, qkreply=$qkreply, aiModel=$aiModel")
         } catch (e: Exception) {
             Timber.e(e, "Failed to write debug log")
         }
         // #endregion
         val shouldShowQkPopup = when {
             aiAutoReplyToAll -> false // Auto-reply enabled, don't show popup
-            aiReplyEnabled -> true // Smart replies enabled, show popup for smart reply option
+            aiReplyEnabled && hasConfiguredAiBackend -> true // Smart replies enabled, show popup for smart reply option
             else -> qkreply // Use existing qkreply setting
         }
         // #region agent log
@@ -366,13 +367,13 @@ class NotificationManagerImpl @Inject constructor(
         // #endregion
 
         // Add smart reply button to notification if smart replies are enabled
-        if (aiReplyEnabled && ollamaModel.isNotEmpty() && !aiAutoReplyToAll) {
+        if (aiReplyEnabled && hasConfiguredAiBackend && !aiAutoReplyToAll) {
             // #region agent log
             try {
-                android.util.Log.d("DEBUG_HYP_A", "Adding smart reply action: threadId=$threadId, aiReplyEnabled=$aiReplyEnabled, ollamaModel=$ollamaModel, aiAutoReplyToAll=$aiAutoReplyToAll")
+                android.util.Log.d("DEBUG_HYP_A", "Adding smart reply action: threadId=$threadId, aiReplyEnabled=$aiReplyEnabled, aiModel=$aiModel, aiAutoReplyToAll=$aiAutoReplyToAll")
                 val logFile = java.io.File(context.getExternalFilesDir(null), "debug.log")
                 logFile.parentFile?.mkdirs()
-                val logEntry = """{"timestamp":${System.currentTimeMillis()},"location":"NotificationManagerImpl.kt:300","message":"Adding smart reply action to notification","data":{"threadId":$threadId,"aiReplyEnabled":$aiReplyEnabled,"ollamaModel":"$ollamaModel","aiAutoReplyToAll":$aiAutoReplyToAll},"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}""" + "\n"
+                val logEntry = """{"timestamp":${System.currentTimeMillis()},"location":"NotificationManagerImpl.kt:300","message":"Adding smart reply action to notification","data":{"threadId":$threadId,"aiReplyEnabled":$aiReplyEnabled,"aiModel":"$aiModel","aiAutoReplyToAll":$aiAutoReplyToAll},"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}""" + "\n"
                 java.io.FileWriter(logFile, true).use { it.append(logEntry) }
                 Timber.d("Adding smart reply action to notification for threadId=$threadId")
             } catch (e: Exception) {

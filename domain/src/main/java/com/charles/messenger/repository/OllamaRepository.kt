@@ -19,7 +19,10 @@
 package com.charles.messenger.repository
 
 import com.charles.messenger.model.Message
+import com.charles.messenger.model.AiModelInstallUpdate
+import com.charles.messenger.model.AiModelOption
 import com.charles.messenger.model.OllamaModel
+import io.reactivex.Observable
 import io.reactivex.Single
 
 /**
@@ -34,6 +37,13 @@ interface OllamaRepository {
      * @return Single emitting list of available models
      */
     fun getAvailableModels(baseUrl: String): Single<List<OllamaModel>>
+
+    fun getManagedModels(baseUrl: String): Single<List<AiModelOption>>
+
+    fun pullModel(
+        baseUrl: String,
+        model: String
+    ): Observable<AiModelInstallUpdate>
 
     /**
      * Generate smart reply suggestions based on conversation context

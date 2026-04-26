@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.gms.ads.AdView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/adView"
+    android:id="@+id/adContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_alignParentBottom="true"
-    android:layout_gravity="bottom"
-    android:layout_centerHorizontal="true"
-    app:adSize="BANNER"
-    app:adUnitId="@string/admob_banner_id" />
+    android:layout_gravity="bottom">
+
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/adView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        app:adSize="BANNER"
+        app:adUnitId="@string/admob_banner_id" />
+
+</FrameLayout>

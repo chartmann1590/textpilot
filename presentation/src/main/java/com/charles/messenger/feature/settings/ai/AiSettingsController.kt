@@ -1,21 +1,3 @@
-/*
- * Copyright (C) 2024 Charles Hartmann
- *
- * This file is part of QKSMS.
- *
- * QKSMS is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * QKSMS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with QKSMS.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.charles.messenger.feature.settings.ai
 
 import android.app.AlertDialog
@@ -25,13 +7,15 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import com.jakewharton.rxbinding2.view.clicks
-import com.jakewharton.rxbinding2.widget.checkedChanges
 import com.charles.messenger.R
 import com.charles.messenger.common.base.QkController
 import com.charles.messenger.common.widget.PreferenceView
 import com.charles.messenger.common.widget.QkSwitch
 import com.charles.messenger.injection.appComponent
+import com.charles.messenger.model.AiModelOption
+import com.charles.messenger.model.AiProvider
+import com.jakewharton.rxbinding2.view.clicks
+import com.jakewharton.rxbinding2.widget.checkedChanges
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
@@ -41,6 +25,7 @@ class AiSettingsController : QkController<AiSettingsView, AiSettingsState, AiSet
 
     @Inject override lateinit var presenter: AiSettingsPresenter
 
+    private val providerSelectedSubject: Subject<AiProvider> = PublishSubject.create()
     private val urlChangedSubject: Subject<String> = PublishSubject.create()
     private val modelSelectedSubject: Subject<String> = PublishSubject.create()
     private val personaChangedSubject: Subject<String> = PublishSubject.create()
@@ -48,10 +33,14 @@ class AiSettingsController : QkController<AiSettingsView, AiSettingsState, AiSet
 
     private lateinit var preferences: LinearLayout
     private lateinit var aiEnabled: PreferenceView
+    private lateinit var providerSelection: PreferenceView
     private lateinit var ollamaUrl: PreferenceView
     private lateinit var modelSelection: PreferenceView
+    private lateinit var onDeviceModelName: PreferenceView
+    private lateinit var onDeviceModelPath: PreferenceView
     private lateinit var testConnection: Button
     private lateinit var connectionStatus: TextView
+    private lateinit var onDeviceHelp: TextView
     private lateinit var aiAutoReplyToAll: PreferenceView
     private lateinit var autoReplyWarning: TextView
     private lateinit var aiPersona: PreferenceView
@@ -66,35 +55,24 @@ class AiSettingsController : QkController<AiSettingsView, AiSettingsState, AiSet
 
     override fun onViewCreated(view: View) {
         super.onViewCreated(view)
-        // #region agent log
-        com.charles.messenger.util.DebugLogger.log(
-            location = "AiSettingsController.kt:61",
-            message = "onViewCreated started",
-            hypothesisId = "H2"
-        )
-        // #endregion
+
         preferences = view.findViewById(R.id.preferences)
         aiEnabled = view.findViewById(R.id.aiEnabled)
+        providerSelection = view.findViewById(R.id.providerSelection)
         ollamaUrl = view.findViewById(R.id.ollamaUrl)
         modelSelection = view.findViewById(R.id.modelSelection)
+        onDeviceModelName = view.findViewById(R.id.onDeviceModelName)
+        onDeviceModelPath = view.findViewById(R.id.onDeviceModelPath)
         testConnection = view.findViewById(R.id.testConnection)
         connectionStatus = view.findViewById(R.id.connectionStatus)
+        onDeviceHelp = view.findViewById(R.id.onDeviceHelp)
         aiAutoReplyToAll = view.findViewById(R.id.aiAutoReplyToAll)
         autoReplyWarning = view.findViewById(R.id.autoReplyWarning)
         aiPersona = view.findViewById(R.id.aiPersona)
         aiSignatureEnabled = view.findViewById(R.id.aiSignatureEnabled)
         aiSignatureText = view.findViewById(R.id.aiSignatureText)
         signaturePreview = view.findViewById(R.id.signaturePreview)
-        
-        // #region agent log
-        com.charles.messenger.util.DebugLogger.log(
-            location = "AiSettingsController.kt:73",
-            message = "All views initialized, calling bindIntents",
-            data = mapOf("preferencesInitialized" to ::preferences.isInitialized),
-            hypothesisId = "H2"
-        )
-        // #endregion
-        // Bind intents AFTER all views are initialized
+
         presenter.bindIntents(this)
     }
 
@@ -103,56 +81,23 @@ class AiSettingsController : QkController<AiSettingsView, AiSettingsState, AiSet
         setTitle(R.string.ai_settings_title)
         showBackButton(true)
 
-        // Handle clicks on switch preferences to toggle them
-        aiEnabled.clicks().subscribe {
+        aiEnabled.setOnClickListener {
             val switch = aiEnabled.widget?.findViewById<QkSwitch>(R.id.checkbox)
             switch?.isChecked = !(switch?.isChecked ?: false)
         }
 
-        aiAutoReplyToAll.clicks().subscribe {
+        aiAutoReplyToAll.setOnClickListener {
             val switch = aiAutoReplyToAll.widget?.findViewById<QkSwitch>(R.id.checkbox)
             switch?.isChecked = !(switch?.isChecked ?: false)
         }
 
-        aiSignatureEnabled.clicks().subscribe {
+        aiSignatureEnabled.setOnClickListener {
             val switch = aiSignatureEnabled.widget?.findViewById<QkSwitch>(R.id.checkbox)
             switch?.isChecked = !(switch?.isChecked ?: false)
         }
     }
 
-    override fun preferenceClicks(): Observable<PreferenceView> {
-        // #region agent log
-        com.charles.messenger.util.DebugLogger.log(
-            location = "AiSettingsController.kt:93",
-            message = "preferenceClicks called",
-            data = mapOf("preferencesInitialized" to ::preferences.isInitialized),
-            hypothesisId = "H2"
-        )
-        // #endregion
-        if (!::preferences.isInitialized) {
-            // #region agent log
-            com.charles.messenger.util.DebugLogger.log(
-                location = "AiSettingsController.kt:96",
-                message = "preferences not initialized, returning empty",
-                hypothesisId = "H2"
-            )
-            // #endregion
-            return Observable.empty()
-        }
-        // #region agent log
-        com.charles.messenger.util.DebugLogger.log(
-            location = "AiSettingsController.kt:100",
-            message = "preferences initialized, building observable",
-            data = mapOf("childCount" to preferences.childCount),
-            hypothesisId = "H2"
-        )
-        // #endregion
-        return (0 until preferences.childCount)
-            .map { index -> preferences.getChildAt(index) }
-            .mapNotNull { view -> view as? PreferenceView }
-            .map { preference -> preference.clicks().map { preference } }
-            .let { preferences -> Observable.merge(preferences) }
-    }
+    override fun preferenceClicks(): Observable<PreferenceView> = Observable.empty()
 
     override fun testConnectionClicks(): Observable<Unit> = testConnection.clicks()
 
@@ -163,6 +108,8 @@ class AiSettingsController : QkController<AiSettingsView, AiSettingsState, AiSet
                 ?.skipInitialValue()
         } ?: Observable.empty()
     }
+
+    override fun providerSelected(): Observable<AiProvider> = providerSelectedSubject
 
     override fun ollamaUrlChanged(): Observable<String> = urlChangedSubject
 
@@ -192,19 +139,42 @@ class AiSettingsController : QkController<AiSettingsView, AiSettingsState, AiSet
         Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
     }
 
-    override fun showModelPicker(models: List<String>, selected: String) {
+    override fun showProviderPicker(selected: AiProvider) {
+        val options = arrayOf(
+            activity!!.getString(R.string.ai_provider_ollama),
+            activity!!.getString(R.string.ai_provider_on_device)
+        )
+        val selectedIndex = if (selected == AiProvider.OLLAMA) 0 else 1
+
+        AlertDialog.Builder(activity)
+            .setTitle(R.string.ai_settings_provider)
+            .setSingleChoiceItems(options, selectedIndex) { dialog, which ->
+                providerSelectedSubject.onNext(if (which == 0) AiProvider.OLLAMA else AiProvider.ON_DEVICE)
+                dialog.dismiss()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    override fun showModelPicker(models: List<AiModelOption>, selected: String) {
         if (models.isEmpty()) {
-            showToast("No models available. Check connection and try again.")
+            showToast("No models available yet")
             return
         }
 
-        val selectedIndex = models.indexOf(selected).takeIf { it >= 0 } ?: 0
+        val labels = models.map { model ->
+            when {
+                model.installed -> "${model.displayName} (Installed)"
+                model.summary.isNotBlank() -> "${model.displayName} (${model.summary})"
+                else -> model.displayName
+            }
+        }
 
+        val selectedIndex = models.indexOfFirst { it.id == selected }.takeIf { it >= 0 } ?: 0
         AlertDialog.Builder(activity)
             .setTitle(R.string.ai_settings_model)
-            .setSingleChoiceItems(models.toTypedArray(), selectedIndex) { dialog, which ->
-                val model = models[which]
-                modelSelectedSubject.onNext(model)
+            .setSingleChoiceItems(labels.toTypedArray(), selectedIndex) { dialog, which ->
+                modelSelectedSubject.onNext(models[which].id)
                 dialog.dismiss()
             }
             .setNegativeButton(android.R.string.cancel, null)
@@ -244,8 +214,7 @@ class AiSettingsController : QkController<AiSettingsView, AiSettingsState, AiSet
             .setTitle(R.string.ai_settings_persona_dialog_title)
             .setView(editText)
             .setPositiveButton(android.R.string.ok) { _, _ ->
-                val persona = editText.text.toString().trim()
-                personaChangedSubject.onNext(persona)
+                personaChangedSubject.onNext(editText.text.toString().trim())
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
@@ -262,99 +231,107 @@ class AiSettingsController : QkController<AiSettingsView, AiSettingsState, AiSet
             .setTitle(R.string.ai_settings_signature_dialog_title)
             .setView(editText)
             .setPositiveButton(android.R.string.ok) { _, _ ->
-                val signature = editText.text.toString().trim()
-                signatureTextChangedSubject.onNext(signature)
+                signatureTextChangedSubject.onNext(editText.text.toString().trim())
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
 
     override fun render(state: AiSettingsState) {
-        // Update AI enabled switch
         aiEnabled.widget?.let { widget ->
             (widget.findViewById<View>(R.id.checkbox) as? QkSwitch)?.isChecked = state.aiEnabled
         }
 
-        // Update Ollama URL summary
-        ollamaUrl.summary = state.ollamaUrl.ifEmpty { "Not configured" }
+        providerSelection.summary = when (state.provider) {
+            AiProvider.OLLAMA -> activity!!.getString(R.string.ai_provider_ollama)
+            AiProvider.ON_DEVICE -> activity!!.getString(R.string.ai_provider_on_device)
+        }
+        providerSelection.setOnClickListener {
+            showProviderPicker(state.provider)
+        }
 
-        // Handle URL click to show input dialog
-        ollamaUrl.clicks().subscribe {
+        ollamaUrl.summary = state.ollamaUrl.ifEmpty { "Not configured" }
+        ollamaUrl.setOnClickListener {
             showUrlInputDialog(state.ollamaUrl)
         }
 
-        // Update model selection summary
-        modelSelection.summary = state.selectedModel.ifEmpty { "No model selected" }
-
-        // Handle model click
-        modelSelection.clicks().subscribe {
-            if (state.availableModels.isNotEmpty()) {
-                showModelPicker(state.availableModels.map { it.name }, state.selectedModel)
-            } else {
-                showToast("Please test connection first to load models")
-            }
+        modelSelection.summary = when (state.provider) {
+            AiProvider.OLLAMA -> state.ollamaModel.ifEmpty { activity!!.getString(R.string.ai_settings_model_summary) }
+            AiProvider.ON_DEVICE -> state.onDeviceModelName.ifEmpty { activity!!.getString(R.string.ai_settings_on_device_model_name_summary) }
+        }
+        modelSelection.setOnClickListener {
+            showModelPicker(
+                state.availableModels,
+                when (state.provider) {
+                    AiProvider.OLLAMA -> state.ollamaModel
+                    AiProvider.ON_DEVICE -> state.availableModels.firstOrNull {
+                        it.displayName == state.onDeviceModelName
+                    }?.id.orEmpty()
+                }
+            )
         }
 
-        // Update connection status
-        connectionStatus.text = when (state.connectionStatus) {
-            ConnectionStatus.Unknown -> ""
-            ConnectionStatus.Testing -> "Testing connection..."
-            ConnectionStatus.Connected -> "✓ Connected (${state.availableModels.size} models available)"
-            ConnectionStatus.Failed -> "✗ Connection failed"
+        onDeviceModelName.visibility = View.GONE
+        onDeviceModelPath.summary = state.onDeviceModelPath.ifEmpty {
+            activity!!.getString(R.string.ai_settings_on_device_model_path_summary)
         }
+        onDeviceModelPath.isClickable = false
 
-        connectionStatus.visibility = if (state.connectionStatus == ConnectionStatus.Unknown) {
-            View.GONE
+        connectionStatus.text = when {
+            state.installStatus.isNotBlank() -> state.installStatus
+            state.connectionStatus == ConnectionStatus.Unknown -> ""
+            state.connectionStatus == ConnectionStatus.Testing -> activity!!.getString(R.string.ai_settings_status_testing)
+            state.connectionStatus == ConnectionStatus.Connected && state.provider == AiProvider.OLLAMA ->
+                activity!!.getString(R.string.ai_settings_status_connected, state.availableModels.count { it.installed })
+            state.connectionStatus == ConnectionStatus.Connected ->
+                activity!!.getString(R.string.ai_settings_status_on_device_ready)
+            else -> activity!!.getString(R.string.ai_settings_status_failed)
+        }
+        connectionStatus.visibility = if (connectionStatus.text.isNullOrBlank()) View.GONE else View.VISIBLE
+
+        val ollamaVisible = state.provider == AiProvider.OLLAMA
+        ollamaUrl.visibility = if (ollamaVisible) View.VISIBLE else View.GONE
+        modelSelection.visibility = View.VISIBLE
+        onDeviceModelPath.visibility = if (ollamaVisible) View.GONE else View.VISIBLE
+        onDeviceHelp.visibility = if (ollamaVisible) View.GONE else View.VISIBLE
+        testConnection.text = if (ollamaVisible) {
+            activity!!.getString(R.string.ai_settings_test_connection)
         } else {
-            View.VISIBLE
+            activity!!.getString(R.string.ai_settings_validate_on_device)
         }
 
-        // Update test button state
         testConnection.isEnabled = !state.loadingModels
         testConnection.alpha = if (state.loadingModels) 0.5f else 1.0f
+        modelSelection.isEnabled = !state.loadingModels
+        modelSelection.alpha = if (state.loadingModels) 0.5f else 1.0f
 
-        // Update auto-reply toggle
         aiAutoReplyToAll.widget?.let { widget ->
             (widget.findViewById<View>(R.id.checkbox) as? QkSwitch)?.isChecked = state.autoReplyToAll
         }
-
-        // Show/hide warning based on auto-reply state
         autoReplyWarning.visibility = if (state.autoReplyToAll) View.VISIBLE else View.GONE
 
-        // Update persona summary
         aiPersona.summary = if (state.persona.isNotEmpty()) {
-            if (state.persona.length > 50) {
-                state.persona.take(50) + "..."
-            } else {
-                state.persona
-            }
+            if (state.persona.length > 50) state.persona.take(50) + "..." else state.persona
         } else {
             activity!!.getString(R.string.ai_settings_persona_not_set)
         }
-
-        // Handle persona click
-        aiPersona.clicks().subscribe {
+        aiPersona.setOnClickListener {
             showPersonaInputDialog(state.persona)
         }
 
-        // Update signature toggle
         aiSignatureEnabled.widget?.let { widget ->
             (widget.findViewById<View>(R.id.checkbox) as? QkSwitch)?.isChecked = state.signatureEnabled
         }
 
-        // Update signature text summary
         aiSignatureText.summary = state.signatureText
-
-        // Handle signature text click
-        aiSignatureText.clicks().subscribe {
+        aiSignatureText.setOnClickListener {
             showSignatureInputDialog(state.signatureText)
         }
 
-        // Update signature preview
         if (state.signatureEnabled && state.signatureText.isNotEmpty()) {
             val exampleText = activity!!.getString(R.string.ai_settings_signature_example)
             signaturePreview.text = activity!!.getString(R.string.ai_settings_signature_preview) + "\n" +
-                    exampleText + "\n\n" + state.signatureText
+                exampleText + "\n\n" + state.signatureText
             signaturePreview.visibility = View.VISIBLE
         } else {
             signaturePreview.visibility = View.GONE

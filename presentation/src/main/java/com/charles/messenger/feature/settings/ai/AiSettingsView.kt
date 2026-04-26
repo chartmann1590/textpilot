@@ -20,6 +20,7 @@ package com.charles.messenger.feature.settings.ai
 
 import com.charles.messenger.common.base.QkViewContract
 import com.charles.messenger.common.widget.PreferenceView
+import com.charles.messenger.model.AiProvider
 import io.reactivex.Observable
 
 interface AiSettingsView : QkViewContract<AiSettingsState> {
@@ -27,6 +28,7 @@ interface AiSettingsView : QkViewContract<AiSettingsState> {
     fun preferenceClicks(): Observable<PreferenceView>
     fun testConnectionClicks(): Observable<Unit>
     fun aiEnabledChanged(): Observable<Boolean>
+    fun providerSelected(): Observable<AiProvider>
     fun ollamaUrlChanged(): Observable<String>
     fun modelSelected(): Observable<String>
     fun autoReplyToAllChanged(): Observable<Boolean>
@@ -35,7 +37,8 @@ interface AiSettingsView : QkViewContract<AiSettingsState> {
     fun signatureTextChanged(): Observable<String>
 
     fun showToast(message: String)
-    fun showModelPicker(models: List<String>, selected: String)
+    fun showProviderPicker(selected: AiProvider)
+    fun showModelPicker(models: List<com.charles.messenger.model.AiModelOption>, selected: String)
     fun showUrlInputDialog(currentUrl: String)
     fun showPersonaInputDialog(currentPersona: String)
     fun showSignatureInputDialog(currentSignature: String)

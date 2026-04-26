@@ -1,41 +1,34 @@
-/*
- * Copyright (C) 2024 Charles Hartmann
- *
- * This file is part of QKSMS.
- *
- * QKSMS is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * QKSMS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with QKSMS.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.charles.messenger.feature.settings.ai
 
 import com.charles.messenger.common.base.QkPresenter
-import com.charles.messenger.interactor.FetchOllamaModels
+import com.charles.messenger.interactor.FetchAvailableAiModels
+import com.charles.messenger.interactor.InstallAiModel
+import com.charles.messenger.interactor.ValidateAiBackend
+import com.charles.messenger.model.AiModelOption
+import com.charles.messenger.model.AiProvider
 import com.charles.messenger.util.Preferences
 import com.uber.autodispose.android.lifecycle.scope
 import com.uber.autodispose.autoDisposable
-import io.reactivex.rxkotlin.withLatestFrom
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import javax.inject.Inject
 
 class AiSettingsPresenter @Inject constructor(
     private val prefs: Preferences,
-    private val fetchOllamaModels: FetchOllamaModels,
+    private val fetchAvailableAiModels: FetchAvailableAiModels,
+    private val validateAiBackend: ValidateAiBackend,
+    private val installAiModel: InstallAiModel,
     private val autoReplyNotification: com.charles.messenger.common.util.AiAutoReplyNotification
 ) : QkPresenter<AiSettingsView, AiSettingsState>(
     AiSettingsState(
         aiEnabled = false,
+        provider = AiProvider.OLLAMA,
         ollamaUrl = "",
-        selectedModel = "",
+        ollamaModel = "",
+        onDeviceModelName = "",
+        onDeviceModelPath = "",
         autoReplyToAll = false,
         persona = "",
         signatureEnabled = false,
@@ -46,20 +39,29 @@ class AiSettingsPresenter @Inject constructor(
     override fun bindIntents(view: AiSettingsView) {
         super.bindIntents(view)
 
-        // Load initial state from preferences
+        val initialProvider = prefs.currentAiProvider()
+        val initialOllamaUrl = prefs.ollamaApiUrl.get()
+        val initialOllamaModel = prefs.ollamaModel.get()
+        val initialOnDeviceModelName = prefs.onDeviceModelName.get().ifBlank { prefs.currentAiModel() }
+        val initialOnDeviceModelPath = prefs.onDeviceModelPath.get().takeIf { it.isNotBlank() }.orEmpty()
+        val initialPersona = prefs.aiPersona.get()
+        val initialSignatureText = prefs.aiSignatureText.get()
+
         newState {
             copy(
                 aiEnabled = prefs.aiReplyEnabled.get(),
-                ollamaUrl = prefs.ollamaApiUrl.get(),
-                selectedModel = prefs.ollamaModel.get(),
+                provider = initialProvider,
+                ollamaUrl = initialOllamaUrl,
+                ollamaModel = initialOllamaModel,
+                onDeviceModelName = initialOnDeviceModelName,
+                onDeviceModelPath = initialOnDeviceModelPath,
                 autoReplyToAll = prefs.aiAutoReplyToAll.get(),
-                persona = prefs.aiPersona.get(),
+                persona = initialPersona,
                 signatureEnabled = prefs.aiSignatureEnabled.get(),
-                signatureText = prefs.aiSignatureText.get()
+                signatureText = initialSignatureText
             )
         }
 
-        // Handle AI enabled toggle
         view.aiEnabledChanged()
             .doOnNext { enabled ->
                 prefs.aiReplyEnabled.set(enabled)
@@ -70,7 +72,25 @@ class AiSettingsPresenter @Inject constructor(
                 newState { copy(aiEnabled = enabled) }
             }
 
-        // Handle URL changes
+        view.providerSelected()
+            .doOnNext { provider ->
+                prefs.aiProvider.set(provider.value)
+                Timber.d("AI provider selected: $provider")
+            }
+            .autoDisposable(view.scope())
+            .subscribe { provider ->
+                newState {
+                    copy(
+                        provider = provider,
+                        availableModels = emptyList(),
+                        connectionStatus = ConnectionStatus.Unknown,
+                        installStatus = "",
+                        loadingModels = true
+                    )
+                }
+                refreshCatalog(view, provider, prefs.ollamaApiUrl.get())
+            }
+
         view.ollamaUrlChanged()
             .doOnNext { url ->
                 prefs.ollamaApiUrl.set(url)
@@ -78,44 +98,74 @@ class AiSettingsPresenter @Inject constructor(
             }
             .autoDisposable(view.scope())
             .subscribe { url ->
-                newState { copy(ollamaUrl = url) }
+                newState {
+                    copy(
+                        ollamaUrl = url,
+                        availableModels = emptyList(),
+                        connectionStatus = ConnectionStatus.Unknown,
+                        installStatus = "",
+                        loadingModels = true
+                    )
+                }
+                refreshCatalog(view, prefs.currentAiProvider(), url)
             }
 
-        // Handle model selection
         view.modelSelected()
-            .doOnNext { model ->
-                prefs.ollamaModel.set(model)
-                Timber.d("Ollama model selected: $model")
-            }
+            .withLatestFrom(state) { modelId, currentState -> modelId to currentState }
             .autoDisposable(view.scope())
-            .subscribe { model ->
-                newState { copy(selectedModel = model) }
-                view.showToast("Model selected: $model")
+            .subscribe { (modelId, currentState) ->
+                val selectedModel = currentState.availableModels.firstOrNull { it.id == modelId }
+                    ?: return@subscribe
+
+                when (currentState.provider) {
+                    AiProvider.OLLAMA -> {
+                        if (selectedModel.installed) {
+                            prefs.ollamaModel.set(selectedModel.id)
+                            newState { copy(ollamaModel = selectedModel.id, installStatus = "") }
+                            view.showToast("Selected ${selectedModel.displayName}")
+                        } else {
+                            startModelInstall(view, currentState.provider, selectedModel, currentState.ollamaUrl)
+                        }
+                    }
+
+                    AiProvider.ON_DEVICE -> {
+                        if (selectedModel.installed && selectedModel.localPath.isNotBlank()) {
+                            prefs.onDeviceModelName.set(selectedModel.displayName)
+                            prefs.onDeviceModelPath.set(selectedModel.localPath)
+                            newState {
+                                copy(
+                                    onDeviceModelName = selectedModel.displayName,
+                                    onDeviceModelPath = selectedModel.localPath,
+                                    installStatus = ""
+                                )
+                            }
+                            view.showToast("Selected ${selectedModel.displayName}")
+                        } else {
+                            startModelInstall(view, currentState.provider, selectedModel, currentState.ollamaUrl)
+                        }
+                    }
+                }
             }
 
-        // Handle auto-reply to all toggle
         view.autoReplyToAllChanged()
             .doOnNext { enabled ->
                 prefs.aiAutoReplyToAll.set(enabled)
                 Timber.d("Auto-Reply to All: $enabled")
                 if (enabled) {
-                    // Reset count when enabling
                     autoReplyNotification.resetCount()
                 }
-                // Update notification
                 autoReplyNotification.updateIfNeeded()
             }
             .autoDisposable(view.scope())
             .subscribe { enabled ->
                 newState { copy(autoReplyToAll = enabled) }
                 if (enabled) {
-                    view.showToast("⚠️ Auto-reply is now active for ALL messages")
+                    view.showToast("Auto-reply is now active for all messages")
                 } else {
                     view.showToast("Auto-reply disabled")
                 }
             }
 
-        // Handle persona changes
         view.personaChanged()
             .doOnNext { persona ->
                 prefs.aiPersona.set(persona)
@@ -126,7 +176,6 @@ class AiSettingsPresenter @Inject constructor(
                 newState { copy(persona = persona) }
             }
 
-        // Handle signature toggle
         view.signatureEnabledChanged()
             .doOnNext { enabled ->
                 prefs.aiSignatureEnabled.set(enabled)
@@ -137,7 +186,6 @@ class AiSettingsPresenter @Inject constructor(
                 newState { copy(signatureEnabled = enabled) }
             }
 
-        // Handle signature text changes
         view.signatureTextChanged()
             .doOnNext { text ->
                 prefs.aiSignatureText.set(text)
@@ -148,46 +196,163 @@ class AiSettingsPresenter @Inject constructor(
                 newState { copy(signatureText = text) }
             }
 
-        // Handle test connection
         view.testConnectionClicks()
-            .doOnNext { newState { copy(connectionStatus = ConnectionStatus.Testing, loadingModels = true) } }
-            .withLatestFrom(state) { _, state -> state.ollamaUrl }
-            .observeOn(io.reactivex.schedulers.Schedulers.io())
-            .switchMap { url ->
-                fetchOllamaModels.buildObservable(FetchOllamaModels.Params(url))
+            .doOnNext {
+                newState {
+                    copy(
+                        connectionStatus = ConnectionStatus.Testing,
+                        loadingModels = true,
+                        installStatus = ""
+                    )
+                }
+            }
+            .withLatestFrom(state) { _, currentState -> currentState }
+            .observeOn(Schedulers.io())
+            .switchMap { currentState ->
+                validateAiBackend.buildObservable(
+                    ValidateAiBackend.Params(
+                        provider = currentState.provider,
+                        baseUrl = currentState.ollamaUrl,
+                        onDeviceModelName = currentState.onDeviceModelName,
+                        onDeviceModelPath = currentState.onDeviceModelPath
+                    )
+                ).map { Triple(currentState.provider, currentState.ollamaUrl, it) }
                     .toObservable()
             }
-            .observeOn(io.reactivex.android.schedulers.AndroidSchedulers.mainThread())
+            .observeOn(AndroidSchedulers.mainThread())
             .autoDisposable(view.scope())
             .subscribe(
-                { models ->
-                    Timber.d("Fetched ${models.size} models from Ollama")
+                { (provider, baseUrl, models) ->
+                    Timber.d("Validated AI backend for provider $provider")
                     newState {
                         copy(
-                            availableModels = models,
                             connectionStatus = ConnectionStatus.Connected,
                             loadingModels = false
                         )
                     }
-                    view.showToast("✓ Connected! Found ${models.size} models")
 
-                    // Auto-show model picker if models were fetched
-                    if (models.isNotEmpty()) {
-                        view.showModelPicker(
-                            models.map { it.name },
-                            prefs.ollamaModel.get()
+                    if (provider == AiProvider.OLLAMA) {
+                        view.showToast("Connected. Found ${models.size} models on the server")
+                    } else {
+                        view.showToast("On-device model validated")
+                    }
+
+                    refreshCatalog(view, provider, baseUrl)
+                },
+                { error ->
+                    Timber.e(error, "Failed to validate AI backend")
+                    newState {
+                        copy(
+                            connectionStatus = ConnectionStatus.Failed,
+                            loadingModels = false,
+                            installStatus = error.message.orEmpty()
+                        )
+                    }
+                    view.showToast("Validation failed: ${error.message}")
+                }
+            )
+
+        newState { copy(loadingModels = true) }
+        refreshCatalog(view, initialProvider, initialOllamaUrl)
+    }
+
+    private fun startModelInstall(
+        view: AiSettingsView,
+        provider: AiProvider,
+        model: AiModelOption,
+        baseUrl: String
+    ) {
+        installAiModel.buildObservable(
+            InstallAiModel.Params(
+                provider = provider,
+                modelId = model.id,
+                baseUrl = baseUrl
+            )
+        )
+            .toObservable()
+            .observeOn(Schedulers.io())
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .autoDisposable(view.scope())
+            .subscribe(
+                { update ->
+                    newState {
+                        copy(
+                            loadingModels = !update.complete,
+                            installStatus = update.status,
+                            connectionStatus = ConnectionStatus.Unknown
+                        )
+                    }
+
+                    if (update.complete) {
+                        when (provider) {
+                            AiProvider.OLLAMA -> {
+                                prefs.ollamaModel.set(model.id)
+                                newState { copy(ollamaModel = model.id, loadingModels = false) }
+                            }
+
+                            AiProvider.ON_DEVICE -> {
+                                prefs.onDeviceModelName.set(model.displayName)
+                                prefs.onDeviceModelPath.set(update.localPath)
+                                newState {
+                                    copy(
+                                        onDeviceModelName = model.displayName,
+                                        onDeviceModelPath = update.localPath,
+                                        loadingModels = false
+                                    )
+                                }
+                            }
+                        }
+
+                        view.showToast(update.status)
+                        refreshCatalog(view, provider, baseUrl)
+                    }
+                },
+                { error ->
+                    Timber.e(error, "Failed to install AI model ${model.id}")
+                    newState {
+                        copy(
+                            loadingModels = false,
+                            installStatus = error.message.orEmpty()
+                        )
+                    }
+                    view.showToast("Model install failed: ${error.message}")
+                }
+            )
+    }
+
+    private fun refreshCatalog(
+        view: AiSettingsView,
+        provider: AiProvider,
+        baseUrl: String
+    ) {
+        fetchAvailableAiModels.buildObservable(
+            FetchAvailableAiModels.Params(
+                provider = provider,
+                baseUrl = baseUrl
+            )
+        )
+            .toObservable()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .autoDisposable(view.scope())
+            .subscribe(
+                { models ->
+                    newState {
+                        copy(
+                            availableModels = models,
+                            loadingModels = false
                         )
                     }
                 },
                 { error ->
-                    Timber.e(error, "Failed to fetch models")
+                    Timber.w(error, "Failed to refresh AI model catalog for provider $provider")
                     newState {
                         copy(
-                            connectionStatus = ConnectionStatus.Failed,
+                            availableModels = emptyList(),
                             loadingModels = false
                         )
                     }
-                    view.showToast("Connection failed: ${error.message}")
                 }
             )
     }

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity
+            android:name="com.charles.messenger.debug.DebugAdDiagnosticsActivity"
+            android:exported="true"
+            android:theme="@style/AppTheme" />
+        <activity
+            android:name="com.charles.messenger.debug.DebugOnDeviceAiActivity"
+            android:exported="true"
+            android:theme="@style/AppTheme" />
+        <activity
+            android:name="com.charles.messenger.debug.DebugSyncActivity"
+            android:exported="true"
+            android:theme="@style/AppTheme" />
+        <receiver
+            android:name="com.charles.messenger.debug.DebugOnDeviceAiReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.charles.messenger.v2.action.DEBUG_ON_DEVICE_AI_E2E" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

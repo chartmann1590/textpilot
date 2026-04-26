@@ -43,6 +43,15 @@
 
         <View style="@style/Divider" />
 
+        <com.charles.messenger.common.widget.PreferenceView
+            android:id="@+id/providerSelection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:title="@string/ai_settings_provider"
+            app:summary="@string/ai_settings_provider_summary" />
+
+        <View style="@style/Divider" />
+
         <!-- Ollama API URL -->
         <com.charles.messenger.common.widget.PreferenceView
             android:id="@+id/ollamaUrl"
@@ -81,6 +90,35 @@
             android:layout_height="wrap_content"
             app:title="@string/ai_settings_model"
             app:summary="@string/ai_settings_model_summary" />
+
+        <com.charles.messenger.common.widget.PreferenceView
+            android:id="@+id/onDeviceModelName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:title="@string/ai_settings_on_device_model_name"
+            app:summary="@string/ai_settings_on_device_model_name_summary" />
+
+        <com.charles.messenger.common.widget.PreferenceView
+            android:id="@+id/onDeviceModelPath"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:title="@string/ai_settings_on_device_model_path"
+            app:summary="@string/ai_settings_on_device_model_path_summary" />
+
+        <TextView
+            android:id="@+id/onDeviceHelp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="@string/ai_settings_on_device_help"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="12sp"
+            android:visibility="gone" />
 
         <View style="@style/Divider" />
 

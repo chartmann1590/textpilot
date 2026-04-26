@@ -65,7 +65,7 @@ class AiAutoReplyReceiver : BroadcastReceiver() {
         }
 
         // Check if AI is configured
-        if (!prefs.aiReplyEnabled.get() || prefs.ollamaModel.get().isEmpty()) {
+        if (!prefs.aiReplyEnabled.get() || !prefs.hasConfiguredAiBackend()) {
             Timber.w("AI not configured, cannot auto-reply")
             return
         }
@@ -125,8 +125,10 @@ class AiAutoReplyReceiver : BroadcastReceiver() {
                 val persona = prefs.aiPersona.get().takeIf { it.isNotEmpty() }
                 generateSmartReplies
                     .buildObservable(GenerateSmartReplies.Params(
+                        provider = prefs.currentAiProvider(),
                         baseUrl = prefs.ollamaApiUrl.get(),
-                        model = prefs.ollamaModel.get(),
+                        model = prefs.currentAiModel(),
+                        onDeviceModelPath = prefs.onDeviceModelPath.get(),
                         messages = messages,
                         persona = persona
                     ))
@@ -135,26 +137,25 @@ class AiAutoReplyReceiver : BroadcastReceiver() {
                     .flatMap { suggestions ->
                         if (suggestions.isEmpty()) {
                             Timber.w("No suggestions generated")
-                            return@flatMap Single.error<Unit>(Exception("No suggestions available"))
-                        }
+                            Single.error<Unit>(Exception("No suggestions available"))
+                        } else {
+                            var replyText = suggestions.first()
 
-                        var replyText = suggestions.first()
-                        
-                        // Append signature if enabled
-                        if (prefs.aiSignatureEnabled.get() && prefs.aiSignatureText.get().isNotEmpty()) {
-                            replyText = "$replyText\n\n${prefs.aiSignatureText.get()}"
-                            Timber.d("Appended signature to auto-reply")
-                        }
-                        
-                        Timber.d("Auto-replying with: $replyText")
+                            if (prefs.aiSignatureEnabled.get() && prefs.aiSignatureText.get().isNotEmpty()) {
+                                replyText = "$replyText\n\n${prefs.aiSignatureText.get()}"
+                                Timber.d("Appended signature to auto-reply")
+                            }
 
-                        sendMessage.buildObservable(SendMessage.Params(
-                            subId = -1,
-                            threadId = threadId,
-                            addresses = listOf(recipientAddress),
-                            body = replyText,
-                            attachments = emptyList()
-                        )).firstOrError().map { Unit }
+                            Timber.d("Auto-replying with: $replyText")
+
+                            sendMessage.buildObservable(SendMessage.Params(
+                                subId = -1,
+                                threadId = threadId,
+                                addresses = listOf(recipientAddress),
+                                body = replyText,
+                                attachments = emptyList()
+                            )).firstOrError().map { Unit }
+                        }
                     }
             }
             .subscribe(
