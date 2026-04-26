@@ -90,7 +90,7 @@ jobs:
           name: ${{ steps.release_meta.outputs.name }}
           allowUpdates: true
           removeArtifacts: true
-          prerelease: true
+          prerelease: false
           artifactErrorsFailBuild: true
           artifacts: |
             presentation/build/outputs/apk/withAnalytics/release/*.apk
