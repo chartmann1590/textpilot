@@ -24,9 +24,11 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.iterator
+import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import com.charles.messenger.R
@@ -69,8 +71,16 @@ abstract class QkThemedActivity : QkActivity() {
         val bottom: Int
     )
 
+    private data class InitialMargins(
+        val left: Int,
+        val top: Int,
+        val right: Int,
+        val bottom: Int
+    )
+
     companion object {
         private val initialPaddingCache = WeakHashMap<View, InitialPadding>()
+        private val initialMarginsCache = WeakHashMap<View, InitialMargins>()
     }
 
     @Inject lateinit var billingManager: BillingManager
@@ -177,6 +187,7 @@ abstract class QkThemedActivity : QkActivity() {
                             ad.visibility = View.GONE
                             timber.log.Timber.d("User is upgraded, hiding banner ad")
                         } else {
+                            ad.visibility = View.VISIBLE
                             // #region agent log
                             com.charles.messenger.util.DebugLogger.log(
                                 location = "QkThemedActivity.kt:138",
@@ -202,6 +213,7 @@ abstract class QkThemedActivity : QkActivity() {
                                 }
 
                                 override fun onAdFailedToLoad(error: com.google.android.gms.ads.LoadAdError) {
+                                    ad.visibility = View.GONE
                                     // #region agent log
                                     com.charles.messenger.util.DebugLogger.log(
                                         location = "QkThemedActivity.kt:147",
@@ -306,21 +318,21 @@ abstract class QkThemedActivity : QkActivity() {
                 // Ensure bottom pinned ad containers stay above gesture/navigation bar.
                 val adContainer = root.findViewById<View>(resolveId("adContainer"))
                 adContainer?.let { view ->
-                    val initial = view.initialPadding()
-                    view.updatePadding(
-                        left = initial.left + systemBars.left,
-                        right = initial.right + systemBars.right,
-                        bottom = initial.bottom + systemBars.bottom
-                    )
+                    val initialMargins = view.initialMargins()
+                    view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                        leftMargin = initialMargins.left + systemBars.left
+                        rightMargin = initialMargins.right + systemBars.right
+                        bottomMargin = initialMargins.bottom + systemBars.bottom
+                    }
                 }
                 val adView = root.findViewById<View>(R.id.adView)
-                adView?.let { view ->
-                    val initial = view.initialPadding()
-                    view.updatePadding(
-                        left = initial.left + systemBars.left,
-                        right = initial.right + systemBars.right,
-                        bottom = initial.bottom + systemBars.bottom
-                    )
+                adView?.takeIf { adContainer == null }?.let { view ->
+                    val initialMargins = view.initialMargins()
+                    view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                        leftMargin = initialMargins.left + systemBars.left
+                        rightMargin = initialMargins.right + systemBars.right
+                        bottomMargin = initialMargins.bottom + systemBars.bottom
+                    }
                 }
 
                 // Ensure scrolled content remains reachable above the bottom bar/ads.
@@ -356,6 +368,21 @@ abstract class QkThemedActivity : QkActivity() {
 
     private fun resolveId(name: String): Int {
         return resources.getIdentifier(name, "id", packageName)
+    }
+
+    private fun View.initialMargins(): InitialMargins {
+        val cached = initialMarginsCache[this]
+        if (cached != null) return cached
+
+        val layoutParams = layoutParams as? ViewGroup.MarginLayoutParams
+        val initial = InitialMargins(
+            left = layoutParams?.leftMargin ?: 0,
+            top = layoutParams?.topMargin ?: 0,
+            right = layoutParams?.rightMargin ?: 0,
+            bottom = layoutParams?.bottomMargin ?: 0
+        )
+        initialMarginsCache[this] = initial
+        return initial
     }
 
 }

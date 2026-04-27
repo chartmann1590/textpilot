@@ -25,6 +25,8 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.view.Gravity
 import android.view.Menu
@@ -74,6 +76,7 @@ import com.charles.messenger.databinding.DrawerViewBinding
 import com.charles.messenger.databinding.MainPermissionHintBinding
 import com.charles.messenger.databinding.MainSyncingBinding
 import javax.inject.Inject
+import kotlin.math.min
 
 class MainActivity : QkThemedActivity(), MainView {
 
@@ -135,6 +138,10 @@ class MainActivity : QkThemedActivity(), MainView {
     private val changelogDialog by lazy { ChangelogDialog(this) }
     private val backPressedSubject: Subject<NavItem> = PublishSubject.create()
     private lateinit var nativeAdController: NativeAdController
+    private val nativeAdRetryHandler = Handler(Looper.getMainLooper())
+    private var nativeAdRetryAttempt = 0
+    private var shouldShowNativeAds = false
+    private val maxNativeAdRetryAttempts = 5
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
@@ -153,13 +160,16 @@ class MainActivity : QkThemedActivity(), MainView {
         // Preload interstitial ad
         interstitialAdManager.loadAd(this)
         billingManager.upgradeStatus
-            .take(1)
+            .distinctUntilChanged()
             .autoDisposable(scope())
             .subscribe { upgraded ->
                 if (!upgraded) {
-                    nativeAdController.loadInto(binding.nativeAdContainer)
+                    shouldShowNativeAds = true
+                    loadNativeAd(force = true)
                 } else {
-                    binding.nativeAdContainer.isVisible = false
+                    shouldShowNativeAds = false
+                    cancelNativeAdRetry()
+                    conversationsAdapter.setInlineNativeAd(null)
                 }
             }
         analyticsInitializer.init(this)
@@ -392,6 +402,9 @@ class MainActivity : QkThemedActivity(), MainView {
     override fun onResume() {
         super.onResume()
         activityResumedIntent.onNext(true)
+        if (shouldShowNativeAds && !conversationsAdapter.hasInlineAd()) {
+            loadNativeAd(force = true)
+        }
     }
 
     override fun onPause() {
@@ -403,9 +416,74 @@ class MainActivity : QkThemedActivity(), MainView {
     }
 
     override fun onDestroy() {
+        cancelNativeAdRetry()
         nativeAdController.destroy()
         super.onDestroy()
         disposables.dispose()
+    }
+
+    private fun loadNativeAd(force: Boolean = false) {
+        if (!shouldShowNativeAds) return
+        if (isFinishing || isDestroyed) return
+        if (!force && conversationsAdapter.hasInlineAd()) return
+        com.charles.messenger.util.DebugLogger.log(
+            location = "MainActivity.kt:loadNativeAd",
+            message = "Attempting native ad load",
+            data = mapOf(
+                "force" to force.toString(),
+                "retryAttempt" to nativeAdRetryAttempt.toString(),
+                "hasInlineAd" to conversationsAdapter.hasInlineAd().toString()
+            ),
+            hypothesisId = "ADS_NATIVE_4"
+        )
+
+        nativeAdController.load(
+            onLoadedAd = { nativeAd ->
+                conversationsAdapter.setInlineNativeAd(nativeAd)
+                nativeAdRetryAttempt = 0
+                com.charles.messenger.util.DebugLogger.log(
+                    location = "MainActivity.kt:loadNativeAd",
+                    message = "Native ad load callback success; retry reset",
+                    hypothesisId = "ADS_NATIVE_4"
+                )
+            },
+            onFailed = {
+                scheduleNativeAdRetry()
+            }
+        )
+    }
+
+    private fun scheduleNativeAdRetry() {
+        if (!shouldShowNativeAds) return
+        if (isFinishing || isDestroyed) return
+        if (nativeAdRetryAttempt >= maxNativeAdRetryAttempts) {
+            com.charles.messenger.util.DebugLogger.log(
+                location = "MainActivity.kt:scheduleNativeAdRetry",
+                message = "Native ad retry cap reached",
+                data = mapOf("retryAttempt" to nativeAdRetryAttempt.toString()),
+                hypothesisId = "ADS_NATIVE_5"
+            )
+            return
+        }
+
+        cancelNativeAdRetry()
+        val cappedAttempt = min(nativeAdRetryAttempt, 4)
+        val delayMs = 5_000L * (1L shl cappedAttempt)
+        com.charles.messenger.util.DebugLogger.log(
+            location = "MainActivity.kt:scheduleNativeAdRetry",
+            message = "Scheduling native ad retry",
+            data = mapOf(
+                "retryAttempt" to nativeAdRetryAttempt.toString(),
+                "delayMs" to delayMs.toString()
+            ),
+            hypothesisId = "ADS_NATIVE_5"
+        )
+        nativeAdRetryAttempt++
+        nativeAdRetryHandler.postDelayed({ loadNativeAd(force = true) }, delayMs)
+    }
+
+    private fun cancelNativeAdRetry() {
+        nativeAdRetryHandler.removeCallbacksAndMessages(null)
     }
 
     override fun showBackButton(show: Boolean) {

@@ -22,6 +22,7 @@ import android.content.Context
 import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.core.text.buildSpannedString
 import androidx.core.text.color
@@ -38,6 +39,8 @@ import com.charles.messenger.common.widget.GroupAvatarView
 import com.charles.messenger.common.widget.QkTextView
 import com.charles.messenger.model.Conversation
 import com.charles.messenger.util.PhoneNumberUtils
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
 import javax.inject.Inject
 
 class ConversationsAdapter @Inject constructor(
@@ -47,6 +50,14 @@ class ConversationsAdapter @Inject constructor(
     private val navigator: Navigator,
     private val phoneNumberUtils: PhoneNumberUtils
 ) : QkRealmAdapter<Conversation>() {
+    companion object {
+        const val VIEW_TYPE_CONVERSATION_READ = 0
+        const val VIEW_TYPE_CONVERSATION_UNREAD = 1
+        const val VIEW_TYPE_INLINE_AD = 2
+        private const val INLINE_AD_FREQUENCY = 5
+    }
+
+    private var inlineNativeAd: NativeAd? = null
 
     init {
         // This is how we access the threadId for the swipe actions
@@ -55,9 +66,14 @@ class ConversationsAdapter @Inject constructor(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
+        if (viewType == VIEW_TYPE_INLINE_AD) {
+            val view = layoutInflater.inflate(R.layout.conversation_inline_native_ad_item, parent, false)
+            return QkViewHolder(view)
+        }
+
         val view = layoutInflater.inflate(R.layout.conversation_list_item, parent, false)
 
-        if (viewType == 1) {
+        if (viewType == VIEW_TYPE_CONVERSATION_UNREAD) {
             val textColorPrimary = parent.context.resolveThemeColor(android.R.attr.textColorPrimary)
 
             val title = view.findViewById<QkTextView>(R.id.title)
@@ -95,6 +111,19 @@ class ConversationsAdapter @Inject constructor(
     }
 
     override fun onBindViewHolder(holder: QkViewHolder, position: Int) {
+        if (getItemViewType(position) == VIEW_TYPE_INLINE_AD) {
+            val adSlot = holder.itemView.findViewById<FrameLayout>(R.id.inlineAdSlot)
+            val nativeAd = inlineNativeAd
+            adSlot.removeAllViews()
+            if (nativeAd != null) {
+                val adView = LayoutInflater.from(holder.itemView.context)
+                    .inflate(R.layout.native_ad_layout, adSlot, false) as NativeAdView
+                com.charles.messenger.common.util.NativeAdController.bind(adView, nativeAd)
+                adSlot.addView(adView)
+            }
+            return
+        }
+
         val conversation = getItem(position) ?: return
 
         // If the last message wasn't incoming, then the colour doesn't really matter anyway
@@ -135,10 +164,50 @@ class ConversationsAdapter @Inject constructor(
     }
 
     override fun getItemId(position: Int): Long {
+        if (isInlineAdPosition(position)) return Long.MIN_VALUE + position
         return getItem(position)?.id ?: -1
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (getItem(position)?.unread == false) 0 else 1
+        if (isInlineAdPosition(position)) return VIEW_TYPE_INLINE_AD
+        return if (getItem(position)?.unread == false) VIEW_TYPE_CONVERSATION_READ else VIEW_TYPE_CONVERSATION_UNREAD
+    }
+
+    override fun getItemCount(): Int {
+        val baseCount = super.getItemCount()
+        return baseCount + inlineAdCount(baseCount)
+    }
+
+    override fun getItem(index: Int): Conversation? {
+        if (isInlineAdPosition(index)) return null
+        return super.getItem(dataIndexForAdapterPosition(index))
+    }
+
+    fun setInlineNativeAd(ad: NativeAd?) {
+        if (inlineNativeAd === ad) return
+        inlineNativeAd = ad
+        notifyDataSetChanged()
+    }
+
+    fun hasInlineAd(): Boolean = inlineNativeAd != null
+
+    private fun shouldShowInlineAd(baseCount: Int = super.getItemCount()): Boolean {
+        return inlineNativeAd != null && baseCount >= INLINE_AD_FREQUENCY
+    }
+
+    private fun isInlineAdPosition(position: Int): Boolean {
+        if (!shouldShowInlineAd()) return false
+        return (position + 1) % (INLINE_AD_FREQUENCY + 1) == 0
+    }
+
+    private fun dataIndexForAdapterPosition(position: Int): Int {
+        if (!shouldShowInlineAd()) return position
+        val adsBeforePosition = (position + 1) / (INLINE_AD_FREQUENCY + 1)
+        return position - adsBeforePosition
+    }
+
+    private fun inlineAdCount(baseCount: Int): Int {
+        if (!shouldShowInlineAd(baseCount)) return 0
+        return baseCount / INLINE_AD_FREQUENCY
     }
 }

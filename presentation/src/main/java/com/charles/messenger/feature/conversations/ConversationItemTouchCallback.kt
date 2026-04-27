@@ -90,6 +90,13 @@ class ConversationItemTouchCallback @Inject constructor(
         return false
     }
 
+    override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+        if (viewHolder.itemViewType == ConversationsAdapter.VIEW_TYPE_INLINE_AD) {
+            return 0
+        }
+        return super.getSwipeDirs(recyclerView, viewHolder)
+    }
+
     override fun onChildDraw(
         c: Canvas,
         recyclerView: RecyclerView,

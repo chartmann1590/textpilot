@@ -22,8 +22,10 @@ import timber.log.Timber
 class NativeAdController(
     private val activity: Activity
 ) {
-
     companion object {
+        // Google's official Android native test ad unit ID.
+        private const val TEST_NATIVE_AD_UNIT_ID = "ca-app-pub-3940256099942544/2247696110"
+
         fun bind(adView: NativeAdView, ad: NativeAd) {
             val headlineView = adView.findViewById<TextView>(R.id.ad_headline)
             val bodyView = adView.findViewById<TextView>(R.id.ad_body)
@@ -67,48 +69,98 @@ class NativeAdController(
     }
 
     private var nativeAd: NativeAd? = null
+    private var loading = false
 
-    fun loadInto(container: FrameLayout) {
-        val adUnitId = activity.getString(R.string.admob_native_advanced_id)
-        if (adUnitId.isBlank()) {
-            container.isVisible = false
-            return
-        }
+    fun load(
+        onLoadedAd: ((NativeAd) -> Unit)? = null,
+        onFailed: (() -> Unit)? = null
+    ) {
+        if (loading) return
+
+        val configuredAdUnitId = activity.getString(R.string.admob_native_advanced_id)
+        val adUnitId = configuredAdUnitId.ifBlank { TEST_NATIVE_AD_UNIT_ID }
+        com.charles.messenger.util.DebugLogger.log(
+            location = "NativeAdController.kt:loadInto",
+            message = "Native ad load requested",
+            data = mapOf(
+                "adUnitId" to adUnitId,
+                "loading" to loading.toString(),
+                "usingFallbackTestId" to configuredAdUnitId.isBlank().toString()
+            ),
+            hypothesisId = "ADS_NATIVE_1"
+        )
+
+        loading = true
 
         val adLoader = AdLoader.Builder(activity, adUnitId)
             .forNativeAd { loadedAd ->
+                loading = false
                 if (activity.isFinishing || activity.isDestroyed) {
                     loadedAd.destroy()
+                    com.charles.messenger.util.DebugLogger.log(
+                        location = "NativeAdController.kt:onNativeAdLoaded",
+                        message = "Activity is finishing/destroyed; native ad discarded",
+                        hypothesisId = "ADS_NATIVE_2"
+                    )
+                    onFailed?.invoke()
                     return@forNativeAd
                 }
 
                 nativeAd?.destroy()
                 nativeAd = loadedAd
-
-                val adView = LayoutInflater.from(activity)
-                    .inflate(R.layout.native_ad_layout, container, false) as NativeAdView
-
-                bind(adView, loadedAd)
-                container.removeAllViews()
-                container.addView(adView)
-                container.isVisible = true
+                com.charles.messenger.util.DebugLogger.log(
+                    location = "NativeAdController.kt:onNativeAdLoaded",
+                    message = "Native ad loaded successfully",
+                    hypothesisId = "ADS_NATIVE_2"
+                )
+                onLoadedAd?.invoke(loadedAd)
             }
             .withNativeAdOptions(NativeAdOptions.Builder().build())
             .withAdListener(object : AdListener() {
                 override fun onAdFailedToLoad(adError: LoadAdError) {
-                    container.removeAllViews()
-                    container.isVisible = false
+                    loading = false
+                    com.charles.messenger.util.DebugLogger.log(
+                        location = "NativeAdController.kt:onAdFailedToLoad",
+                        message = "Native ad failed to load",
+                        data = mapOf(
+                            "errorCode" to adError.code.toString(),
+                            "errorMessage" to adError.message,
+                            "errorDomain" to adError.domain
+                        ),
+                        hypothesisId = "ADS_NATIVE_3"
+                    )
                     Timber.w("Native ad failed to load: ${adError.message} (${adError.code})")
+                    onFailed?.invoke()
                 }
             })
             .build()
 
-        container.removeAllViews()
-        container.isVisible = false
         adLoader.loadAd(AdRequest.Builder().build())
     }
 
+    fun loadInto(
+        container: FrameLayout,
+        onLoaded: (() -> Unit)? = null,
+        onFailed: (() -> Unit)? = null
+    ) {
+        container.removeAllViews()
+        container.isVisible = false
+        load(
+            onLoadedAd = { loadedAd ->
+                val adView = LayoutInflater.from(activity)
+                    .inflate(R.layout.native_ad_layout, container, false) as NativeAdView
+                bind(adView, loadedAd)
+                container.removeAllViews()
+                container.addView(adView)
+                container.isVisible = true
+                onLoaded?.invoke()
+            },
+            onFailed = onFailed
+        )
+    }
+
     fun destroy() {
+        loading = false
         nativeAd?.destroy()
         nativeAd = null
     }
