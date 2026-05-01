@@ -67,18 +67,16 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -partition-size 2048
           disable-animations: false
           script: |
-            set -euo pipefail
+            set -eu
 
             wait_for_emulator_ready() {
-              local deadline=$((SECONDS + 420))
-              while (( SECONDS < deadline )); do
+              deadline_epoch=$(( $(date +%s) + 420 ))
+              while [ "$(date +%s)" -lt "${deadline_epoch}" ]; do
                 adb wait-for-device || true
-                local boot
                 boot="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
-                local sdk
                 sdk="$(adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r' || true)"
 
-                if [ "${boot}" = "1" ] && [[ "${sdk}" =~ ^[0-9]+$ ]]; then
+                if [ "${boot}" = "1" ] && echo "${sdk}" | grep -Eq '^[0-9]+$'; then
                   if adb shell cmd package list packages >/dev/null 2>&1; then
                     echo "Emulator ready (sdk=${sdk})"
                     adb devices -l
@@ -126,18 +124,16 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -partition-size 2048
           disable-animations: false
           script: |
-            set -euo pipefail
+            set -eu
 
             wait_for_emulator_ready() {
-              local deadline=$((SECONDS + 420))
-              while (( SECONDS < deadline )); do
+              deadline_epoch=$(( $(date +%s) + 420 ))
+              while [ "$(date +%s)" -lt "${deadline_epoch}" ]; do
                 adb wait-for-device || true
-                local boot
                 boot="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
-                local sdk
                 sdk="$(adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r' || true)"
 
-                if [ "${boot}" = "1" ] && [[ "${sdk}" =~ ^[0-9]+$ ]]; then
+                if [ "${boot}" = "1" ] && echo "${sdk}" | grep -Eq '^[0-9]+$'; then
                   if adb shell cmd package list packages >/dev/null 2>&1; then
                     echo "Emulator ready (sdk=${sdk})"
                     adb devices -l
