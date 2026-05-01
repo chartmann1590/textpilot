@@ -14,6 +14,7 @@ jobs:
     env:
       CI: "true"
       CI_VERSION_CODE: ${{ github.run_number }}
+      ADB_INSTALL_TIMEOUT: "10"
       keystore_password: ${{ secrets.STORE_PASSWORD }}
       key_alias: ${{ secrets.KEY_ALIAS }}
       key_password: ${{ secrets.KEY_PASSWORD }}
@@ -55,6 +56,9 @@ jobs:
       - name: Build release artifacts
         run: ./gradlew :presentation:assembleWithAnalyticsRelease :presentation:bundleWithAnalyticsRelease --stacktrace
 
+      - name: Build instrumentation test APKs
+        run: ./gradlew :presentation:assembleNoAnalyticsDebug :presentation:assembleNoAnalyticsDebugAndroidTest --stacktrace
+
       - name: Run instrumentation tests on emulator (attempt 1)
         id: emulator_tests_1
         continue-on-error: true
@@ -71,6 +75,7 @@ jobs:
       - name: Run instrumentation tests on emulator (attempt 2)
         id: emulator_tests_2
         if: steps.emulator_tests_1.outcome == 'failure'
+        continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
@@ -81,8 +86,18 @@ jobs:
           disable-animations: false
           script: sh .github/scripts/run-connected-tests.sh
 
+      - name: Upload instrumentation test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumentation-test-reports-${{ github.sha }}
+          path: |
+            presentation/build/reports/androidTests/
+            presentation/build/outputs/androidTest-results/
+          if-no-files-found: ignore
+
       - name: Fail if emulator tests failed twice
-        if: steps.emulator_tests_1.outcome == 'failure' && steps.emulator_tests_2.outcome == 'failure'
+        if: always() && steps.emulator_tests_1.outcome == 'failure' && steps.emulator_tests_2.outcome == 'failure'
         shell: bash
         run: |
           echo "Instrumentation tests failed on both emulator attempts."

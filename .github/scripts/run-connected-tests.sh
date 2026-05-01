@@ -1,30 +1,108 @@
 #!/usr/bin/env sh
 set -eu
 
-wait_for_emulator_ready() {
-  deadline_epoch=$(( $(date +%s) + 420 ))
-  while [ "$(date +%s)" -lt "${deadline_epoch}" ]; do
-    adb wait-for-device || true
-    boot="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
-    sdk="$(adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r' || true)"
+ADB="${ADB:-adb}"
 
-    if [ "${boot}" = "1" ] && echo "${sdk}" | grep -Eq '^[0-9]+$'; then
-      if adb shell cmd package list packages >/dev/null 2>&1; then
+adb_device() {
+  if [ -n "${ANDROID_SERIAL:-}" ]; then
+    "${ADB}" -s "${ANDROID_SERIAL}" "$@"
+  else
+    "${ADB}" "$@"
+  fi
+}
+
+print_adb_diagnostics() {
+  echo "ADB diagnostics:"
+  "${ADB}" devices -l || true
+
+  if [ -n "${ANDROID_SERIAL:-}" ]; then
+    adb_device get-state || true
+    adb_device shell getprop sys.boot_completed || true
+    adb_device shell getprop ro.build.version.release || true
+    adb_device shell getprop ro.build.version.sdk || true
+  fi
+}
+
+on_exit() {
+  status=$?
+  if [ "${status}" -ne 0 ]; then
+    print_adb_diagnostics
+  fi
+  exit "${status}"
+}
+
+trap on_exit EXIT
+
+select_emulator() {
+  serial="$("${ADB}" devices | awk '$1 ~ /^emulator-/ && $2 == "device" { print $1; exit }')"
+  if [ -n "${serial}" ]; then
+    export ANDROID_SERIAL="${serial}"
+    return 0
+  fi
+
+  return 1
+}
+
+probe_full_getprop() {
+  probe_file="${RUNNER_TEMP:-/tmp}/qksms-getprop.txt"
+  rm -f "${probe_file}"
+
+  # Gradle/ddmlib probes compatibility with a full getprop call; wait until
+  # that path is responsive so the emulator is not reported as Unknown API Level.
+  if command -v timeout >/dev/null 2>&1; then
+    timeout 3 "${ADB}" -s "${ANDROID_SERIAL}" shell getprop > "${probe_file}" 2>/dev/null
+  else
+    "${ADB}" -s "${ANDROID_SERIAL}" shell getprop > "${probe_file}" 2>/dev/null
+  fi
+
+  grep -Eq '^\[ro\.build\.version\.sdk\]: \[[0-9]+\]' "${probe_file}"
+}
+
+wait_for_emulator_ready() {
+  deadline_epoch=$(( $(date +%s) + 600 ))
+  stable_property_reads=0
+
+  while [ "$(date +%s)" -lt "${deadline_epoch}" ]; do
+    "${ADB}" start-server >/dev/null
+
+    if ! select_emulator; then
+      "${ADB}" reconnect offline >/dev/null 2>&1 || true
+      sleep 5
+      continue
+    fi
+
+    adb_device wait-for-device || true
+    state="$(adb_device get-state 2>/dev/null | tr -d '\r' || true)"
+    boot="$(adb_device shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+    sdk="$(adb_device shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r' || true)"
+
+    if [ "${state}" = "device" ] && [ "${boot}" = "1" ] && echo "${sdk}" | grep -Eq '^[0-9]+$'; then
+      if probe_full_getprop && adb_device shell cmd package list packages >/dev/null 2>&1; then
+        stable_property_reads=$((stable_property_reads + 1))
+      else
+        stable_property_reads=0
+      fi
+
+      if [ "${stable_property_reads}" -ge 2 ]; then
+        echo "Using emulator ${ANDROID_SERIAL}"
         echo "Emulator ready (sdk=${sdk})"
-        adb devices -l
-        adb shell getprop ro.build.version.release || true
-        adb shell getprop ro.build.version.sdk || true
+        "${ADB}" devices -l
+        adb_device shell getprop ro.build.version.release || true
+        adb_device shell getprop ro.build.version.sdk || true
         return 0
       fi
+    else
+      stable_property_reads=0
     fi
 
     # Recover from transient adb/device stalls seen in CI.
-    adb reconnect offline >/dev/null 2>&1 || true
+    if [ "${state}" != "device" ]; then
+      "${ADB}" reconnect offline >/dev/null 2>&1 || true
+    fi
     sleep 5
   done
 
   echo "Timed out waiting for emulator readiness"
-  adb devices -l || true
   return 1
 }
 
@@ -35,11 +113,4 @@ run_connected_tests() {
 }
 
 wait_for_emulator_ready
-run_connected_tests || {
-  echo "First test invocation failed; restarting adb and retrying once in-attempt"
-  adb kill-server || true
-  sleep 2
-  adb start-server
-  wait_for_emulator_ready
-  run_connected_tests
-}
+run_connected_tests
