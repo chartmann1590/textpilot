@@ -114,6 +114,14 @@ android {
         abortOnError false
     }
 
+    // AGP 7.x compatibility: package native libs in legacy mode so installation
+    // extracts them instead of requiring page-aligned direct APK loading.
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+
     productFlavors {
         withAnalytics { dimension "analytics" }
         noAnalytics { dimension "analytics" }
