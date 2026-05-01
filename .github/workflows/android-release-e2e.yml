@@ -110,6 +110,7 @@ jobs:
         with:
           tag: ${{ steps.release_meta.outputs.tag }}
           name: ${{ steps.release_meta.outputs.name }}
+          makeLatest: true
           allowUpdates: true
           removeArtifacts: true
           prerelease: false
