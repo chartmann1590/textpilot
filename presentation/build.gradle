@@ -54,12 +54,12 @@ android {
 
         setProperty("archivesBaseName", "messenger-v${versionName}")
 
-        // Use test ad IDs for debug builds, production IDs for release
-        def admobInterstitialId = localProperties.getProperty('ADMOB_INTERSTITIAL_ID', System.getenv("ADMOB_INTERSTITIAL_ID") ?: '')
-        def admobRewardedId = localProperties.getProperty('ADMOB_REWARDED_ID', System.getenv("ADMOB_REWARDED_ID") ?: '')
-        def admobBannerId = localProperties.getProperty('ADMOB_BANNER_ID', System.getenv("ADMOB_BANNER_ID") ?: '')
-        def admobNativeAdvancedId = localProperties.getProperty('ADMOB_NATIVE_ADVANCED_ID', System.getenv("ADMOB_NATIVE_ADVANCED_ID") ?: '')
-        def admobAppId = localProperties.getProperty('ADMOB_APP_ID', System.getenv("ADMOB_APP_ID") ?: '')
+        // AdMob IDs
+        def admobInterstitialId = 'ca-app-pub-8382831211800454/9644132901'
+        def admobRewardedId = 'ca-app-pub-8382831211800454/9644132901'
+        def admobBannerId = 'ca-app-pub-8382831211800454/3331763582'
+        def admobNativeAdvancedId = 'ca-app-pub-8382831211800454/5704887899'
+        def admobAppId = 'ca-app-pub-8382831211800454~8831502279'
 
         buildConfigField "String", "ADMOB_INTERSTITIAL_ID", "\"" + admobInterstitialId + "\""
         buildConfigField "String", "ADMOB_REWARDED_ID", "\"" + admobRewardedId + "\""
@@ -75,13 +75,13 @@ android {
 
     buildTypes {
         debug {
-            // Use Google's test ad IDs for debug builds
+            // Use configured AdMob IDs for debug builds
             buildConfigField "Boolean", "USE_TEST_ADS", "true"
-            buildConfigField "String", "ADMOB_INTERSTITIAL_ID", "\"ca-app-pub-3940256099942544/1033173712\""
-            buildConfigField "String", "ADMOB_REWARDED_ID", "\"ca-app-pub-3940256099942544/5224354917\""
-            resValue "string", "admob_banner_id", "ca-app-pub-3940256099942544/6300978111"
-            resValue "string", "admob_native_advanced_id", "ca-app-pub-3940256099942544/2247696110"
-            manifestPlaceholders = [ADMOB_APP_ID: "ca-app-pub-3940256099942544~3347511713"]
+            buildConfigField "String", "ADMOB_INTERSTITIAL_ID", "\"ca-app-pub-8382831211800454/9644132901\""
+            buildConfigField "String", "ADMOB_REWARDED_ID", "\"ca-app-pub-8382831211800454/9644132901\""
+            resValue "string", "admob_banner_id", "ca-app-pub-8382831211800454/3331763582"
+            resValue "string", "admob_native_advanced_id", "ca-app-pub-8382831211800454/5704887899"
+            manifestPlaceholders = [ADMOB_APP_ID: "ca-app-pub-8382831211800454~8831502279"]
         }
         release {
             minifyEnabled true

@@ -23,8 +23,8 @@ class NativeAdController(
     private val activity: Activity
 ) {
     companion object {
-        // Google's official Android native test ad unit ID.
-        private const val TEST_NATIVE_AD_UNIT_ID = "ca-app-pub-3940256099942544/2247696110"
+        // Fallback native ad unit ID.
+        private const val TEST_NATIVE_AD_UNIT_ID = "ca-app-pub-8382831211800454/5704887899"
 
         fun bind(adView: NativeAdView, ad: NativeAd) {
             val headlineView = adView.findViewById<TextView>(R.id.ad_headline)
