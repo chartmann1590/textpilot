@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQ – TextPilot AI Messaging</title>
+  <meta name="description" content="Frequently asked questions about TextPilot AI Messaging — AI smart replies, self-hosted web SMS, Messenger+, Ollama setup, privacy, and building from source." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://chartmann1590.github.io/textpilot/faq.html" />
+  <meta property="og:title" content="FAQ – TextPilot AI Messaging" />
+  <meta property="og:description" content="Answers to common questions about TextPilot AI Messaging — setup, AI features, web SMS, privacy, and more." />
+  <meta property="og:url" content="https://chartmann1590.github.io/textpilot/faq.html" />
+  <meta property="og:image" content="https://chartmann1590.github.io/textpilot/assets/feature_graphic.png" />
+  <link rel="icon" type="image/png" href="assets/icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- FAQ Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is TextPilot free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. TextPilot AI Messaging is 100% free and open source (GPLv3). The optional Messenger+ in-app purchase unlocks advanced features like scheduled messages and backup, but all core SMS/MMS features are completely free."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does the AI Smart Reply work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "TextPilot's AI runs on your own hardware via Ollama. You install Ollama on your PC, pull a model, then point the app at your local server URL. Messages are sent only to your own Ollama instance — never to any external AI service."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the Web SMS feature?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "TextPilot includes a self-hosted web server (Docker Compose) that syncs your SMS in real time. Access and send messages from any browser. You host the server yourself — complete control over your data."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="assets/icon.png" alt="TextPilot icon" width="34" height="34" />
+        <span>TextPilot</span>
+      </a>
+      <ul class="nav-links" id="navLinks" role="list">
+        <li><a href="index.html#features">Features</a></li>
+        <li><a href="index.html#ai">AI</a></li>
+        <li><a href="index.html#web-sms">Web SMS</a></li>
+        <li><a href="index.html#screenshots">Screenshots</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="https://buymeacoffee.com/charleshartmann" class="btn-coffee" target="_blank" rel="noopener noreferrer">☕ Support</a></li>
+        <li><a href="https://play.google.com/store/apps/details?id=com.charles.messenger.v2" class="btn btn-primary nav-cta" target="_blank" rel="noopener noreferrer">Download</a></li>
+      </ul>
+      <button class="nav-toggle" id="navToggle" aria-label="Open navigation menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="page-hero">
+    <div class="container">
+      <h1>Frequently Asked Questions</h1>
+      <p>Everything you need to know about TextPilot AI Messaging</p>
+    </div>
+  </div>
+
+  <main class="page-content" id="main-content">
+
+    <!-- ── GENERAL ── -->
+    <div class="faq-group">
+      <div class="faq-group-title">General</div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Is TextPilot free?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Yes — TextPilot AI Messaging is 100% free and open source (GPLv3). You can download it from Google Play or directly as an APK from GitHub with no cost.</p>
+            <p>The optional <strong>Messenger+</strong> in-app purchase unlocks advanced features (scheduled messages, backup, advanced blocking, etc.), but all core SMS and MMS features are completely free and always will be.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          How is TextPilot different from the original QKSMS?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>TextPilot is a fork of <a href="https://github.com/moezbhatti/qksms" target="_blank" rel="noopener noreferrer">QKSMS</a> with significant new features added on top:</p>
+            <ul>
+              <li><strong>AI Smart Reply</strong> — on-device AI via your own Ollama server</li>
+              <li><strong>Web SMS Sync</strong> — self-hosted web interface to access messages from any browser</li>
+              <li><strong>Auto-Reply</strong> — fully automatic AI replies when you're busy</li>
+              <li>Enhanced permission handling for Android 13/14+</li>
+              <li>Edge-to-edge display support and UI improvements</li>
+              <li>Improved notification system</li>
+            </ul>
+            <p>All original QKSMS features are preserved and actively maintained.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Which Android versions does TextPilot support?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>TextPilot supports Android 5.0 (API 21) and up, targeting Android 14 (API 35). It works well on modern Android phones and includes special handling for Android 13+ notification permissions and Android 14+ foreground service permissions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Does TextPilot support dual SIM?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Yes. TextPilot has full dual SIM support. You can set a default SIM per conversation, switch SIMs while composing, and the app correctly handles sending and receiving messages from both SIM cards.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Is there MMS support?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Yes — full MMS support is included. You can send and receive photos, videos, audio, and group messages. The app handles long SMS-to-MMS auto-conversion and lets you configure the auto-compress setting for attachments.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AI FEATURES ── -->
+    <div class="faq-group">
+      <div class="faq-group-title">AI Smart Reply</div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          How does the AI Smart Reply work?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>TextPilot uses <a href="https://ollama.ai" target="_blank" rel="noopener noreferrer">Ollama</a> — an open-source tool for running AI models locally — to generate reply suggestions. The app sends your recent conversation messages to your own Ollama server (running on your own computer or local network) and displays 3–5 suggested replies you can tap to use.</p>
+            <p>Your messages <strong>never leave your network</strong>. No external AI services are involved.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          How do I set up AI Smart Reply?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <ol style="margin-left: 18px; margin-bottom: 10px;">
+              <li style="margin-bottom: 6px;">Install <a href="https://ollama.ai" target="_blank" rel="noopener noreferrer">Ollama</a> on your computer</li>
+              <li style="margin-bottom: 6px;">Pull a model: <code>ollama pull llama3.2</code> (or any other model)</li>
+              <li style="margin-bottom: 6px;">Start with network access: <code>OLLAMA_HOST=0.0.0.0 ollama serve</code></li>
+              <li style="margin-bottom: 6px;">In TextPilot: go to <strong>Settings → Smart Reply (AI)</strong></li>
+              <li style="margin-bottom: 6px;">Enter your Ollama URL (e.g., <code>http://192.168.1.100:11434</code>)</li>
+              <li style="margin-bottom: 6px;">Tap <strong>Test Connection</strong> to verify</li>
+              <li>Select your model and enable Smart Reply</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Which AI models are supported?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Any model available through Ollama works. Popular choices include:</p>
+            <ul>
+              <li><strong>llama3.2</strong> — Fast and capable general model</li>
+              <li><strong>dolphin3</strong> — Uncensored, great for natural conversation replies</li>
+              <li><strong>gemma3</strong> — Google's efficient model</li>
+              <li><strong>qwen2.5</strong> — Excellent multilingual support</li>
+              <li><strong>mistral</strong> — Compact and fast</li>
+            </ul>
+            <p>The app fetches the list of installed models from your Ollama server automatically.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          What is Auto-Reply to All Messages?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Auto-Reply is an optional mode where the AI automatically responds to all incoming messages on your behalf. This is useful when you're in meetings, driving, or sleeping.</p>
+            <p>When enabled, a persistent notification appears so you can quickly disable it. Use responsibly — recipients see AI-generated replies as if they came from you.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Is my data sent to OpenAI or any cloud AI?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p><strong>No.</strong> TextPilot's AI exclusively uses your own self-hosted Ollama server. No data is sent to OpenAI, Google, Anthropic, Meta, or any other cloud AI provider. Your messages stay on your local network.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── WEB SMS ── -->
+    <div class="faq-group">
+      <div class="faq-group-title">Web SMS Interface</div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          What is the Web SMS feature?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>TextPilot includes a complete self-hosted web server that syncs your SMS in real time. Once set up, you can read and send text messages from any web browser — your laptop, desktop, tablet, or any device on your network.</p>
+            <p>The web server is a Node.js/Express application with a React frontend, backed by PostgreSQL. It's deployed with a single <code>docker-compose up -d</code> command.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          How do I set up the web interface?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <ol style="margin-left: 18px; margin-bottom: 10px;">
+              <li style="margin-bottom: 6px;">Install <a href="https://docs.docker.com/get-docker/" target="_blank" rel="noopener noreferrer">Docker</a> and Docker Compose on your server/PC</li>
+              <li style="margin-bottom: 6px;"><code>cd web-interface &amp;&amp; cp .env.example .env</code></li>
+              <li style="margin-bottom: 6px;">Generate JWT secrets: <code>node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code></li>
+              <li style="margin-bottom: 6px;">Edit <code>.env</code> with your secrets</li>
+              <li style="margin-bottom: 6px;"><code>docker-compose up -d</code></li>
+              <li style="margin-bottom: 6px;">In TextPilot app: <strong>Settings → Web Sync</strong> → enter your server URL</li>
+              <li>Tap <strong>Perform Initial Sync</strong> to upload your message history</li>
+            </ol>
+            <p>See the <a href="https://github.com/chartmann1590/textpilot/blob/master/docs/WEB_SMS_FEATURE.md" target="_blank" rel="noopener noreferrer">full documentation</a> for detailed instructions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Is the web interface secure?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>The server includes multiple security layers out of the box:</p>
+            <ul>
+              <li>JWT authentication (access + refresh tokens)</li>
+              <li>bcrypt password hashing</li>
+              <li>Rate limiting on all API endpoints</li>
+              <li>CORS protection</li>
+              <li>Helmet.js security headers</li>
+            </ul>
+            <p>For production use, we strongly recommend enabling HTTPS. The server supports both self-signed certificates and Let's Encrypt. You should also use a strong password (12+ characters) and consider restricting network access to your device's IP or VPN.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Can I access my messages from outside my home network?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Yes, with some setup. Options include:</p>
+            <ul>
+              <li><strong>VPN (recommended):</strong> Use Tailscale or WireGuard to securely access your home server from anywhere — no port forwarding needed</li>
+              <li><strong>Port forwarding:</strong> Expose your server on a public port. Use HTTPS and a strong password. Consider Cloudflare Tunnel for easier setup.</li>
+              <li><strong>VPS deployment:</strong> Run the server on a cloud VPS for always-on access</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Does Web SMS work for sending messages too?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Yes — two-way messaging is fully supported. Messages you send from the web are queued in the database, picked up by the Android app during the next sync (which happens instantly on send/receive, or every 60 seconds), and sent via your phone's carrier. MMS attachments are also supported.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PRIVACY ── -->
+    <div class="faq-group">
+      <div class="faq-group-title">Privacy &amp; Security</div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Does TextPilot collect any of my data?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p><strong>No.</strong> TextPilot does not operate any servers. All your messages, contacts, and settings are stored locally on your device. We do not collect, transmit, or sell any personal information.</p>
+            <p>The <strong>NoAnalytics variant</strong> (available on GitHub) contains zero tracking, analytics, or third-party SDKs. The Google Play variant includes Firebase Analytics and Crashlytics for crash reporting.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          What's the difference between the NoAnalytics and WithAnalytics builds?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <ul>
+              <li><strong>NoAnalytics</strong> (GitHub APK): Zero tracking, no Firebase, no Amplitude, no third-party analytics. Recommended for privacy-focused users.</li>
+              <li><strong>WithAnalytics</strong> (Google Play): Includes Firebase Analytics, Crashlytics, Performance Monitoring, and Amplitude to help improve the app. Crash reports help fix bugs.</li>
+            </ul>
+            <p>All SMS/MMS functionality is identical between both variants.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Is TextPilot open source? Can I verify what it does?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Yes — TextPilot is fully open source under the <a href="https://www.gnu.org/licenses/gpl-3.0" target="_blank" rel="noopener noreferrer">GNU GPLv3 license</a>. The complete source code is available on <a href="https://github.com/chartmann1590/textpilot" target="_blank" rel="noopener noreferrer">GitHub</a>. You can review every line of code, build it yourself, and verify its behavior.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MESSENGER+ ── -->
+    <div class="faq-group">
+      <div class="faq-group-title">Messenger+</div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          What is Messenger+ and what does it include?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Messenger+ is a one-time in-app purchase available on Google Play that unlocks premium features and supports development. It includes:</p>
+            <ul>
+              <li>Premium themes with exclusive color palettes</li>
+              <li>Scheduled messages (send at any future date/time)</li>
+              <li>Delayed sending with cancel window</li>
+              <li>Automatic night mode scheduling</li>
+              <li>Local message backup and restore</li>
+              <li>Advanced blocking (keywords and regex patterns)</li>
+              <li>Auto-forward messages</li>
+              <li>Auto-respond to incoming messages</li>
+              <li>Custom auto-emoji shortcuts</li>
+              <li>All future Messenger+ features</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Is there a trial for Messenger+?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Yes — a 7-day free trial is available so you can try all Messenger+ features before purchasing. A hashed device identifier is stored locally to manage the trial period across reinstalls (never transmitted to any server).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DEVELOPMENT ── -->
+    <div class="faq-group">
+      <div class="faq-group-title">Building &amp; Contributing</div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          How do I build TextPilot from source?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Prerequisites: Android Studio (latest stable), JDK 8+, Android SDK (API 21+).</p>
+            <div class="code-block" style="margin: 12px 0;">
+              <pre><code>git clone https://github.com/chartmann1590/textpilot.git
+cd textpilot
+./gradlew :presentation:assembleNoAnalyticsDebug</code></pre>
+            </div>
+            <p>Use <code>gradlew.bat</code> on Windows. The <code>noAnalytics</code> variant is recommended for development — it builds faster with no external dependencies.</p>
+            <p>See <a href="https://github.com/chartmann1590/textpilot/blob/master/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">CONTRIBUTING.md</a> for full instructions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          How do I report a bug or request a feature?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Please open an issue on the <a href="https://github.com/chartmann1590/textpilot/issues" target="_blank" rel="noopener noreferrer">GitHub Issues page</a>. Include your Android version, device model, and steps to reproduce the bug. For feature requests, describe the use case and why it would be useful.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Can I contribute translations?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-answer" role="region">
+          <div class="faq-answer-inner">
+            <p>Yes! Translations are managed through Crowdin. You can contribute at <a href="https://crowdin.com/project/qksms" target="_blank" rel="noopener noreferrer">crowdin.com/project/qksms</a>. Do not edit string resource files directly in the repository.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 48px; padding: 32px; background: var(--light-50); border-radius: var(--radius-lg); border: 1px solid var(--light-200);">
+      <p style="font-size: 1rem; color: var(--text-muted); margin-bottom: 18px;">Still have questions? Open an issue on GitHub or support the project.</p>
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+        <a href="https://github.com/chartmann1590/textpilot/issues" class="btn btn-outline-dark" target="_blank" rel="noopener noreferrer">Ask on GitHub</a>
+        <a href="https://buymeacoffee.com/charleshartmann" class="btn btn-primary" target="_blank" rel="noopener noreferrer">☕ Buy Me a Coffee</a>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="footer-logo">
+          <img src="assets/icon.png" alt="TextPilot" width="28" height="28" loading="lazy" />
+          TextPilot AI Messaging
+        </a>
+        <p>Free, open-source Android SMS with on-device AI and self-hosted web access.</p>
+      </div>
+      <div class="footer-col">
+        <h4>App</h4>
+        <a href="https://play.google.com/store/apps/details?id=com.charles.messenger.v2" target="_blank" rel="noopener noreferrer">Google Play</a>
+        <a href="https://github.com/chartmann1590/textpilot/releases/latest" target="_blank" rel="noopener noreferrer">Download APK</a>
+        <a href="https://github.com/chartmann1590/textpilot" target="_blank" rel="noopener noreferrer">Source Code</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="index.html">Home</a>
+        <a href="faq.html">FAQ</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <a href="https://buymeacoffee.com/charleshartmann" target="_blank" rel="noopener noreferrer">☕ Buy Me a Coffee</a>
+        <a href="https://github.com/chartmann1590/textpilot/issues" target="_blank" rel="noopener noreferrer">Report a Bug</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container footer-bottom-inner">
+        <p>© 2025 Charles Hartmann · Released under <a href="https://www.gnu.org/licenses/gpl-3.0" target="_blank" rel="noopener noreferrer">GPLv3</a></p>
+        <p><a href="privacy-policy.html">Privacy Policy</a> &middot; <a href="faq.html">FAQ</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

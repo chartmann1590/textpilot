@@ -1,89 +1,580 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/12.7.0/firebase-app-compat.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/12.7.0/firebase-auth-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-database-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-firestore-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-functions-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-messaging-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-storage-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-analytics-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-remote-config-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-performance-compat.js"></script>
-    <!-- 
-      initialize the SDK after all desired features are loaded, set useEmulator to false
-      to avoid connecting the SDK to running emulators.
-    -->
-    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+  <!-- Primary SEO -->
+  <title>TextPilot AI Messaging – Beautiful Open Source SMS App with AI for Android</title>
+  <meta name="description" content="TextPilot is a free, open-source Android SMS &amp; MMS app with on-device AI smart replies via Ollama, a self-hosted web interface, Material Design themes, and 100% private messaging. No cloud. No ads." />
+  <meta name="keywords" content="TextPilot, SMS app Android, AI messaging, Ollama SMS, open source SMS, web SMS interface, self-hosted messaging, private SMS, Material Design SMS, QKSMS fork, smart reply Android" />
+  <meta name="author" content="Charles Hartmann" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://chartmann1590.github.io/textpilot/" />
 
-    <style media="screen">
-      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
-      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
-      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
-      @media (max-width: 600px) {
-        body, #message { margin-top: 0; background: white; box-shadow: none; }
-        body { border-top: 16px solid #ffa100; }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="message">
-      <h2>Welcome</h2>
-      <h1>Firebase Hosting Setup Complete</h1>
-      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://chartmann1590.github.io/textpilot/" />
+  <meta property="og:title" content="TextPilot AI Messaging – Beautiful SMS App with AI for Android" />
+  <meta property="og:description" content="Free, open-source Android SMS with on-device AI smart replies, self-hosted web access, and complete privacy. No cloud. No ads." />
+  <meta property="og:image" content="https://chartmann1590.github.io/textpilot/assets/feature_graphic.png" />
+  <meta property="og:image:width" content="1024" />
+  <meta property="og:image:height" content="500" />
+  <meta property="og:site_name" content="TextPilot AI Messaging" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="TextPilot AI Messaging – Beautiful SMS App with AI" />
+  <meta name="twitter:description" content="Free, open-source Android SMS with on-device AI smart replies and self-hosted web access. No cloud. No ads." />
+  <meta name="twitter:image" content="https://chartmann1590.github.io/textpilot/assets/feature_graphic.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/icon.png" />
+  <link rel="apple-touch-icon" href="assets/icon.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "TextPilot AI Messaging",
+    "description": "Free, open-source Android SMS app with on-device AI smart replies via Ollama and a self-hosted web interface.",
+    "applicationCategory": "CommunicationApplication",
+    "operatingSystem": "Android 5.0+",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Person", "name": "Charles Hartmann" },
+    "url": "https://chartmann1590.github.io/textpilot/",
+    "downloadUrl": "https://play.google.com/store/apps/details?id=com.charles.messenger.v2",
+    "codeRepository": "https://github.com/chartmann1590/textpilot",
+    "license": "https://www.gnu.org/licenses/gpl-3.0",
+    "softwareVersion": "3.10.2",
+    "screenshot": "https://chartmann1590.github.io/textpilot/assets/screenshots/01_main_inbox.png"
+  }
+  </script>
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="assets/icon.png" alt="TextPilot icon" width="34" height="34" />
+        <span>TextPilot</span>
+      </a>
+      <ul class="nav-links" id="navLinks" role="list">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#ai">AI</a></li>
+        <li><a href="#web-sms">Web SMS</a></li>
+        <li><a href="#screenshots">Screenshots</a></li>
+        <li><a href="#premium">Premium</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="https://buymeacoffee.com/charleshartmann" class="btn-coffee" target="_blank" rel="noopener noreferrer">☕ Support</a></li>
+        <li><a href="https://play.google.com/store/apps/details?id=com.charles.messenger.v2" class="btn btn-primary nav-cta" target="_blank" rel="noopener noreferrer">Download</a></li>
+      </ul>
+      <button class="nav-toggle" id="navToggle" aria-label="Open navigation menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
-    <p id="load">Firebase SDK Loading&hellip;</p>
+  </nav>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const loadEl = document.querySelector('#load');
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        //
-        // firebase.auth().onAuthStateChanged(user => { });
-        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-        // firebase.firestore().doc('/foo/bar').get().then(() => { });
-        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        // firebase.analytics(); // call to activate
-        // firebase.analytics().logEvent('tutorial_completed');
-        // firebase.performance(); // call to activate
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="hero" aria-label="Hero section">
+    <div class="hero-bg" aria-hidden="true">
+      <div class="hero-orb orb-1"></div>
+      <div class="hero-orb orb-2"></div>
+      <div class="hero-orb orb-3"></div>
+      <div class="hero-grid"></div>
+    </div>
+    <div class="container hero-inner">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge-dot" aria-hidden="true"></span>
+          AI-Powered · Open Source · Private
+        </div>
+        <h1 class="hero-title">
+          The SMS App That<br/>
+          <span class="gradient-text">Thinks Ahead</span>
+        </h1>
+        <p class="hero-description">
+          Beautiful open-source Android messaging with on-device AI smart replies,
+          self-hosted web access, and complete privacy. Free forever.
+        </p>
+        <div class="hero-buttons">
+          <a href="https://play.google.com/store/apps/details?id=com.charles.messenger.v2"
+             class="btn btn-primary btn-lg" target="_blank" rel="noopener noreferrer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20.5v-17c0-.83.94-1.3 1.6-.8l14 8.5c.6.37.6 1.23 0 1.6L4.6 21.3C3.94 21.8 3 21.33 3 20.5z"/></svg>
+            Google Play
+          </a>
+          <a href="https://github.com/chartmann1590/textpilot/releases/latest"
+             class="btn btn-outline btn-lg" target="_blank" rel="noopener noreferrer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.69c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.6 9.6 0 0 1 12 6.8c.85.004 1.7.115 2.5.337 1.9-1.29 2.74-1.02 2.74-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85V21.5c0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+            Download APK
+          </a>
+        </div>
+        <div class="hero-stats" role="list">
+          <div class="stat-item" role="listitem"><strong>Free</strong><span>Open Source</span></div>
+          <div class="stat-divider" aria-hidden="true"></div>
+          <div class="stat-item" role="listitem"><strong>GPLv3</strong><span>Licensed</span></div>
+          <div class="stat-divider" aria-hidden="true"></div>
+          <div class="stat-item" role="listitem"><strong>100%</strong><span>Private</span></div>
+          <div class="stat-divider" aria-hidden="true"></div>
+          <div class="stat-item" role="listitem"><strong>Android</strong><span>5.0+</span></div>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="phones-wrapper">
+          <div class="phone-frame phone-back">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <img src="assets/screenshots/11_conversation_view.png" alt="" loading="eager" />
+            </div>
+          </div>
+          <div class="phone-frame phone-front">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <img src="assets/screenshots/01_main_inbox.png" alt="" loading="eager" />
+            </div>
+          </div>
+          <div class="floating-badge fb-1">✨ AI Reply</div>
+          <div class="floating-badge fb-2">🔒 On-Device</div>
+          <div class="floating-badge fb-3">🌐 Web Sync</div>
+        </div>
+      </div>
+    </div>
+    <a href="#video" class="scroll-indicator" aria-label="Scroll to video section">
+      <div class="scroll-arrow" aria-hidden="true"></div>
+    </a>
+  </section>
 
-        try {
-          let app = firebase.app();
-          let features = [
-            'auth', 
-            'database', 
-            'firestore',
-            'functions',
-            'messaging', 
-            'storage', 
-            'analytics', 
-            'remoteConfig',
-            'performance',
-          ].filter(feature => typeof app[feature] === 'function');
-          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
-        } catch (e) {
-          console.error(e);
-          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
-        }
-      });
-    </script>
-  </body>
+  <!-- ===== VIDEO ===== -->
+  <section class="video-section" id="video">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Watch the Demo</div>
+        <h2>See TextPilot in Action</h2>
+        <p>Watch how AI smart replies and real-time web sync transform your messaging experience</p>
+      </div>
+      <div class="video-wrapper">
+        <video controls preload="metadata" poster="assets/feature_graphic.png"
+               aria-label="TextPilot AI Messaging promotional demo video">
+          <source src="assets/videos/promo.mp4" type="video/mp4" />
+          Your browser does not support HTML5 video.
+        </video>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURES ===== -->
+  <section class="features-section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Core Features</div>
+        <h2>Everything You Need in a Messenger</h2>
+        <p>Powerful, privacy-respecting features built on a beautiful open-source foundation</p>
+      </div>
+      <div class="features-grid">
+        <article class="feature-card" data-animate>
+          <div class="feature-icon">💬</div>
+          <h3>SMS &amp; MMS</h3>
+          <p>Full SMS and MMS support with group messaging, media attachments, delivery confirmations, and dual SIM switching.</p>
+        </article>
+        <article class="feature-card" data-animate>
+          <div class="feature-icon">🎨</div>
+          <h3>Material Design</h3>
+          <p>Beautiful Material Design interface with custom themes, night mode, pure black AMOLED mode, and per-conversation accent colors.</p>
+        </article>
+        <article class="feature-card" data-animate>
+          <div class="feature-icon">🔒</div>
+          <h3>Privacy First</h3>
+          <p>Your messages never leave your device. No cloud accounts, no sign-ins. A NoAnalytics build with zero tracking is available.</p>
+        </article>
+        <article class="feature-card" data-animate>
+          <div class="feature-icon">⚡</div>
+          <h3>QK Reply Popup</h3>
+          <p>Reply to messages instantly without leaving your current app using the smart floating overlay. Quick actions included.</p>
+        </article>
+        <article class="feature-card" data-animate>
+          <div class="feature-icon">🚫</div>
+          <h3>Spam Blocking</h3>
+          <p>Block numbers, keywords, and regex patterns. Drop blocked messages entirely. Compatible with third-party blocker apps.</p>
+        </article>
+        <article class="feature-card" data-animate>
+          <div class="feature-icon">⏰</div>
+          <h3>Scheduled Messages</h3>
+          <p>Schedule messages to send at any future date and time. Manage all scheduled messages from a central view.</p>
+        </article>
+        <article class="feature-card" data-animate>
+          <div class="feature-icon">💾</div>
+          <h3>Local Backup</h3>
+          <p>Back up your entire message history locally on your device. One-tap restore means you never lose a conversation.</p>
+        </article>
+        <article class="feature-card" data-animate>
+          <div class="feature-icon">🔍</div>
+          <h3>Instant Search</h3>
+          <p>Full-text search across all conversations instantly. Find any message in seconds, no matter how old.</p>
+        </article>
+        <article class="feature-card" data-animate>
+          <div class="feature-icon">📱</div>
+          <h3>Dual SIM</h3>
+          <p>Seamless dual SIM support with per-contact defaults. Switch SIMs while composing without leaving the conversation.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== AI SECTION ===== -->
+  <section class="ai-section" id="ai">
+    <div class="container">
+      <div class="ai-inner">
+        <div class="ai-content">
+          <div class="section-label light">AI Smart Reply</div>
+          <h2>Your Private AI<br/>Assistant for SMS</h2>
+          <p>
+            TextPilot's AI runs entirely on <strong>your own hardware</strong> via
+            <a href="https://ollama.ai" target="_blank" rel="noopener noreferrer" class="link-light">Ollama</a>.
+            Your messages never touch external AI servers — not OpenAI, not Google, not anyone.
+          </p>
+          <ul class="ai-features-list">
+            <li>
+              <div class="ai-feat-icon">✨</div>
+              <div>
+                <strong>Smart Reply Suggestions</strong>
+                <span>Get 3–5 contextual reply options in one tap while composing any message</span>
+              </div>
+            </li>
+            <li>
+              <div class="ai-feat-icon">🤖</div>
+              <div>
+                <strong>Auto-Reply to All Messages</strong>
+                <span>Let AI handle replies automatically when you're busy — with a dismissible notification</span>
+              </div>
+            </li>
+            <li>
+              <div class="ai-feat-icon">🧠</div>
+              <div>
+                <strong>Any Ollama Model</strong>
+                <span>Use llama3.2, dolphin3, Gemma, Qwen, Mistral, or any model you have installed locally</span>
+              </div>
+            </li>
+            <li>
+              <div class="ai-feat-icon">🎭</div>
+              <div>
+                <strong>Custom AI Persona</strong>
+                <span>Define your AI's tone, style, and signature — make it sound like you</span>
+              </div>
+            </li>
+            <li>
+              <div class="ai-feat-icon">🏠</div>
+              <div>
+                <strong>Stays on Your Network</strong>
+                <span>Point the app to your local Ollama server. Messages never leave your home network.</span>
+              </div>
+            </li>
+          </ul>
+          <div class="ai-setup-steps">
+            <div class="setup-step">
+              <span class="step-num">1</span>
+              <span>Install <a href="https://ollama.ai" target="_blank" rel="noopener noreferrer" class="link-light">Ollama</a> and pull a model: <code>ollama pull llama3.2</code></span>
+            </div>
+            <div class="setup-step">
+              <span class="step-num">2</span>
+              <span>Start with network access: <code>OLLAMA_HOST=0.0.0.0 ollama serve</code></span>
+            </div>
+            <div class="setup-step">
+              <span class="step-num">3</span>
+              <span>Open <strong>Settings → Smart Reply (AI)</strong> and enter your server URL</span>
+            </div>
+          </div>
+        </div>
+        <div class="ai-visual" aria-hidden="true">
+          <div class="ai-phone-wrap">
+            <div class="phone-frame ai-phone">
+              <div class="phone-notch"></div>
+              <div class="phone-screen">
+                <img src="assets/screenshots/10_compose_new.png" alt="" loading="lazy" />
+              </div>
+            </div>
+            <div class="ai-glow" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== WEB SMS ===== -->
+  <section class="websms-section" id="web-sms">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Web Interface</div>
+        <h2>Your Texts.<br/>Any Browser.<br/><span class="gradient-text">Self-Hosted.</span></h2>
+        <p>
+          TextPilot includes a fully self-hosted, Docker-deployable web server.
+          Access, read, and send your SMS from any browser — with real-time sync,
+          no middleman, and complete control over your data.
+        </p>
+      </div>
+
+      <div class="websms-features-grid">
+        <article class="websms-feat" data-animate>
+          <div class="websms-icon">🐳</div>
+          <h3>One-Command Deploy</h3>
+          <p>Run <code>docker-compose up -d</code> in the <code>web-interface/</code> directory. Live in minutes.</p>
+        </article>
+        <article class="websms-feat" data-animate>
+          <div class="websms-icon">⚡</div>
+          <h3>Real-Time Sync</h3>
+          <p>WebSocket-powered instant updates via Socket.io. New messages appear the moment they hit your phone.</p>
+        </article>
+        <article class="websms-feat" data-animate>
+          <div class="websms-icon">↔️</div>
+          <h3>Two-Way Messaging</h3>
+          <p>Send SMS from your browser. Messages are queued, picked up by your phone, and delivered via your carrier.</p>
+        </article>
+        <article class="websms-feat" data-animate>
+          <div class="websms-icon">🔐</div>
+          <h3>Secure by Default</h3>
+          <p>JWT auth, bcrypt password hashing, rate limiting, and CORS protection. HTTPS supported with a self-signed cert or Let's Encrypt.</p>
+        </article>
+        <article class="websms-feat" data-animate>
+          <div class="websms-icon">🖼️</div>
+          <h3>Full MMS Support</h3>
+          <p>View and send photos, videos, and multimedia messages. Thumbnails and full-size previews included.</p>
+        </article>
+        <article class="websms-feat" data-animate>
+          <div class="websms-icon">🤖</div>
+          <h3>AI on Web Too</h3>
+          <p>The web interface also connects to your Ollama server for smart reply suggestions while composing from any browser.</p>
+        </article>
+      </div>
+
+      <div class="websms-arch">
+        <h3>Architecture at a Glance</h3>
+        <div class="arch-diagram" role="img" aria-label="TextPilot web sync architecture: Android app syncs with Node.js server which connects to browser via WebSocket">
+          <div class="arch-node">
+            <div class="arch-icon">📱</div>
+            <strong>TextPilot App</strong>
+            <span>Instant sync on send/receive + every 60 s</span>
+          </div>
+          <div class="arch-arrow" aria-hidden="true">⇄ HTTPS ⇄</div>
+          <div class="arch-node arch-node-primary">
+            <div class="arch-icon">🖥️</div>
+            <strong>Your Server</strong>
+            <span>Node.js · PostgreSQL · Socket.io</span>
+          </div>
+          <div class="arch-arrow" aria-hidden="true">⇄ WebSocket ⇄</div>
+          <div class="arch-node">
+            <div class="arch-icon">🌐</div>
+            <strong>Web Browser</strong>
+            <span>React/TypeScript UI with live updates</span>
+          </div>
+        </div>
+        <div class="websms-quickstart">
+          <h4>Quick Start</h4>
+          <div class="code-block">
+            <pre><code>cd web-interface
+cp .env.example .env
+# Edit .env — generate JWT secrets with:
+# node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+docker-compose up -d</code></pre>
+            <button class="copy-btn" id="copyBtn" aria-label="Copy quick start commands">Copy</button>
+          </div>
+          <a href="https://github.com/chartmann1590/textpilot/blob/master/docs/WEB_SMS_FEATURE.md"
+             class="btn btn-outline-dark" target="_blank" rel="noopener noreferrer">
+            📖 Full Documentation
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SCREENSHOTS ===== -->
+  <section class="screenshots-section" id="screenshots">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Screenshots</div>
+        <h2>See Every Detail</h2>
+        <p>Explore TextPilot's features through real app screenshots</p>
+      </div>
+      <div class="carousel-wrapper">
+        <button class="carousel-btn carousel-prev" id="carouselPrev" aria-label="Previous screenshot">&#8592;</button>
+        <div class="carousel-track" id="carouselTrack" role="region" aria-label="App screenshots carousel">
+          <div class="carousel-item">
+            <div class="ss-phone"><img src="assets/screenshots/01_main_inbox.png" alt="TextPilot main inbox with conversations and unread counts" loading="lazy" /></div>
+            <p class="ss-caption">Beautiful Inbox</p>
+          </div>
+          <div class="carousel-item">
+            <div class="ss-phone"><img src="assets/screenshots/11_conversation_view.png" alt="TextPilot conversation thread view" loading="lazy" /></div>
+            <p class="ss-caption">Rich Conversations</p>
+          </div>
+          <div class="carousel-item">
+            <div class="ss-phone"><img src="assets/screenshots/10_compose_new.png" alt="Compose new message in TextPilot with contact search" loading="lazy" /></div>
+            <p class="ss-caption">Smart Compose</p>
+          </div>
+          <div class="carousel-item">
+            <div class="ss-phone"><img src="assets/screenshots/02_drawer_menu.png" alt="TextPilot navigation drawer with main sections" loading="lazy" /></div>
+            <p class="ss-caption">Easy Navigation</p>
+          </div>
+          <div class="carousel-item">
+            <div class="ss-phone"><img src="assets/screenshots/04_scheduled.png" alt="Scheduled messages list in TextPilot" loading="lazy" /></div>
+            <p class="ss-caption">Schedule Messages</p>
+          </div>
+          <div class="carousel-item">
+            <div class="ss-phone"><img src="assets/screenshots/05_blocking.png" alt="Block numbers and keywords in TextPilot" loading="lazy" /></div>
+            <p class="ss-caption">Block Spam</p>
+          </div>
+          <div class="carousel-item">
+            <div class="ss-phone"><img src="assets/screenshots/06_backup.png" alt="Local backup feature in TextPilot" loading="lazy" /></div>
+            <p class="ss-caption">Local Backup</p>
+          </div>
+          <div class="carousel-item">
+            <div class="ss-phone"><img src="assets/screenshots/07_search_view.png" alt="Search messages and conversations in TextPilot" loading="lazy" /></div>
+            <p class="ss-caption">Instant Search</p>
+          </div>
+          <div class="carousel-item">
+            <div class="ss-phone"><img src="assets/screenshots/08_settings_main.png" alt="TextPilot settings screen with all options" loading="lazy" /></div>
+            <p class="ss-caption">Rich Settings</p>
+          </div>
+          <div class="carousel-item">
+            <div class="ss-phone"><img src="assets/screenshots/13_qksms_plus.png" alt="Messenger+ premium features overview" loading="lazy" /></div>
+            <p class="ss-caption">Messenger+ Premium</p>
+          </div>
+        </div>
+        <button class="carousel-btn carousel-next" id="carouselNext" aria-label="Next screenshot">&#8594;</button>
+      </div>
+      <div class="carousel-dots" id="carouselDots" aria-label="Screenshot indicators" role="tablist"></div>
+    </div>
+  </section>
+
+  <!-- ===== PREMIUM ===== -->
+  <section class="premium-section" id="premium">
+    <div class="container">
+      <div class="premium-inner">
+        <div class="premium-content">
+          <div class="section-label light">Messenger+</div>
+          <h2>Support Development.<br/>Unlock Premium.</h2>
+          <p>
+            A one-time purchase unlocks powerful extras and helps keep TextPilot
+            actively developed and free for everyone, forever.
+          </p>
+          <div class="premium-list">
+            <div class="prem-item">✅ Premium themes with exclusive colors</div>
+            <div class="prem-item">✅ Scheduled messages at any date &amp; time</div>
+            <div class="prem-item">✅ Delayed sending with cancel window</div>
+            <div class="prem-item">✅ Automatic night mode scheduling</div>
+            <div class="prem-item">✅ Message backup &amp; restore</div>
+            <div class="prem-item">✅ Advanced blocking (keywords &amp; regex)</div>
+            <div class="prem-item">✅ Auto-forward messages</div>
+            <div class="prem-item">✅ Auto-respond to incoming messages</div>
+            <div class="prem-item">✅ Custom auto-emoji shortcuts</div>
+            <div class="prem-item">✅ All future Messenger+ features</div>
+          </div>
+          <a href="https://play.google.com/store/apps/details?id=com.charles.messenger.v2"
+             class="btn btn-primary btn-lg" target="_blank" rel="noopener noreferrer">
+            Get Messenger+
+          </a>
+        </div>
+        <div class="premium-visual" aria-hidden="true">
+          <div class="phone-frame prem-phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <img src="assets/screenshots/13_qksms_plus.png" alt="" loading="lazy" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DOWNLOAD CTA ===== -->
+  <section class="download-section" id="download">
+    <div class="container">
+      <div class="download-inner">
+        <img src="assets/icon.png" alt="TextPilot icon" width="88" height="88" class="download-icon" loading="lazy" />
+        <h2>Ready to Try TextPilot?</h2>
+        <p>Free, open-source, and available now on Android 5.0 and up. No account required.</p>
+        <div class="download-buttons">
+          <a href="https://play.google.com/store/apps/details?id=com.charles.messenger.v2"
+             class="btn btn-white btn-lg" target="_blank" rel="noopener noreferrer">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20.5v-17c0-.83.94-1.3 1.6-.8l14 8.5c.6.37.6 1.23 0 1.6L4.6 21.3C3.94 21.8 3 21.33 3 20.5z"/></svg>
+            Google Play Store
+          </a>
+          <a href="https://github.com/chartmann1590/textpilot/releases/latest"
+             class="btn btn-outline btn-lg" target="_blank" rel="noopener noreferrer">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.69c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.6 9.6 0 0 1 12 6.8c.85.004 1.7.115 2.5.337 1.9-1.29 2.74-1.02 2.74-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85V21.5c0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+            Download APK
+          </a>
+        </div>
+        <p class="download-note">
+          Source code on <a href="https://github.com/chartmann1590/textpilot" target="_blank" rel="noopener noreferrer">GitHub</a>.
+          Licensed under GPLv3. Love the app?
+          <a href="https://buymeacoffee.com/charleshartmann" target="_blank" rel="noopener noreferrer">☕ Buy me a coffee!</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="footer-logo">
+          <img src="assets/icon.png" alt="TextPilot" width="28" height="28" loading="lazy" />
+          TextPilot AI Messaging
+        </a>
+        <p>Free, open-source Android SMS with on-device AI and self-hosted web access. Built on QKSMS.</p>
+        <div class="footer-social">
+          <a href="https://github.com/chartmann1590/textpilot" target="_blank" rel="noopener noreferrer" aria-label="TextPilot on GitHub">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.69c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.6 9.6 0 0 1 12 6.8c.85.004 1.7.115 2.5.337 1.9-1.29 2.74-1.02 2.74-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85V21.5c0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+          </a>
+          <a href="https://buymeacoffee.com/charleshartmann" target="_blank" rel="noopener noreferrer" aria-label="Support on Buy Me a Coffee" style="font-size:1.3rem; text-decoration:none;">☕</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>App</h4>
+          <a href="https://play.google.com/store/apps/details?id=com.charles.messenger.v2" target="_blank" rel="noopener noreferrer">Google Play</a>
+          <a href="https://github.com/chartmann1590/textpilot/releases/latest" target="_blank" rel="noopener noreferrer">Download APK</a>
+          <a href="https://github.com/chartmann1590/textpilot" target="_blank" rel="noopener noreferrer">Source Code</a>
+          <a href="https://github.com/chartmann1590/textpilot/releases" target="_blank" rel="noopener noreferrer">Changelog</a>
+        </div>
+        <div class="footer-col">
+          <h4>Features</h4>
+          <a href="#ai">AI Smart Reply</a>
+          <a href="#web-sms">Web SMS</a>
+          <a href="#features">All Features</a>
+          <a href="#premium">Messenger+</a>
+        </div>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <a href="faq.html">FAQ</a>
+          <a href="privacy-policy.html">Privacy Policy</a>
+          <a href="https://github.com/chartmann1590/textpilot/issues" target="_blank" rel="noopener noreferrer">Report a Bug</a>
+          <a href="https://crowdin.com/project/qksms" target="_blank" rel="noopener noreferrer">Translations</a>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+          <a href="https://buymeacoffee.com/charleshartmann" target="_blank" rel="noopener noreferrer">☕ Buy Me a Coffee</a>
+          <a href="https://github.com/chartmann1590/textpilot/blob/master/docs/WEB_SMS_FEATURE.md" target="_blank" rel="noopener noreferrer">Web Docs</a>
+          <a href="https://github.com/chartmann1590/textpilot/blob/master/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container footer-bottom-inner">
+        <p>© 2025 Charles Hartmann · Released under <a href="https://www.gnu.org/licenses/gpl-3.0" target="_blank" rel="noopener noreferrer">GPLv3</a> · Fork of <a href="https://github.com/moezbhatti/qksms" target="_blank" rel="noopener noreferrer">QKSMS</a></p>
+        <p><a href="privacy-policy.html">Privacy Policy</a> &middot; <a href="faq.html">FAQ</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
 </html>
