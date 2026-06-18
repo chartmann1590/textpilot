@@ -71,6 +71,9 @@ feature_graphic.png
 icon.png
 /icon.png
 /feature_graphic.png
+# Allow website copies
+!public/assets/icon.png
+!public/assets/feature_graphic.png
 
 # Windows artifacts
 nul
