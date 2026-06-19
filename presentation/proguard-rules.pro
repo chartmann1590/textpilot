@@ -4,6 +4,8 @@
 # -keep class android.net.** { *; }
 -dontwarn android.net.ConnectivityManager
 -dontwarn android.net.LinkProperties
+# android-smsmms references Firebase Perf HTTP client which is absent in noAnalytics builds
+-dontwarn com.google.firebase.perf.**
 
 # autodispose
 -dontwarn com.uber.autodispose.**
