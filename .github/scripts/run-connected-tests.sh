@@ -89,6 +89,8 @@ wait_for_emulator_ready() {
         "${ADB}" devices -l
         adb_device shell getprop ro.build.version.release || true
         adb_device shell getprop ro.build.version.sdk || true
+        # Extra stabilization: wait for ddmlib API level to settle before AGP 8.x UTP connects
+        sleep 10
         return 0
       fi
     else
