@@ -42,7 +42,7 @@ class MigratePreferences @Inject constructor(
                     // Theme
                     val defaultTheme = prefs.theme().get().toString()
                     val oldTheme = rxPrefs.getString("pref_key_theme", defaultTheme).get()
-                    prefs.theme().set(Integer.parseInt(oldTheme))
+                    prefs.theme().set(oldTheme.toIntOrNull() ?: prefs.theme().get())
 
                     // Night mode
                     val background = rxPrefs.getString("pref_key_background", "light").get()
