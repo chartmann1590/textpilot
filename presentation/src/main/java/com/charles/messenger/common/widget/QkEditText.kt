@@ -89,7 +89,7 @@ class QkEditText @JvmOverloads constructor(context: Context, attrs: AttributeSet
         }
 
         val callback = InputConnectionCompat.OnCommitContentListener { inputContentInfo, flags, opts ->
-            val grantReadPermission = flags and InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION != 0
+            val grantReadPermission = (flags and InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION) != 0
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1 && grantReadPermission) {
                 return@OnCommitContentListener tryOrNull {

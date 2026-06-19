@@ -47,7 +47,7 @@ abstract class Experiment<T>(val context: Context, val analytics: AnalyticsManag
             }
 
             else -> { // Variant hasn't been set yet
-                variants[Random().nextInt(variants.size)].also { variant ->
+                variants.random().also { variant ->
                     analytics.setUserProperty("Experiment: $key", variant.key)
                     prefs.edit().putString(prefKey, variant.key).apply()
                 }.value

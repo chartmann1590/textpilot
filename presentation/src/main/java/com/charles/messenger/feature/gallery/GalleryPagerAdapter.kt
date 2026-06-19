@@ -117,8 +117,8 @@ class GalleryPagerAdapter @Inject constructor(private val context: Context) : Qk
                 exoPlayers.add(exoPlayer)
 
                 val mediaItem = MediaItem.fromUri(part.getUri())
-                exoPlayer?.setMediaItem(mediaItem)
-                exoPlayer?.prepare()
+                exoPlayer.setMediaItem(mediaItem)
+                exoPlayer.prepare()
             }
         }
     }

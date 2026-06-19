@@ -221,7 +221,7 @@ class BackupRepositoryImpl @Inject constructor(
             }
         }
 
-        if (errorCount > 0) {
+        if (messageCount > 0 && errorCount > 0) {
             Timber.w(Exception("Failed to backup $errorCount/$messageCount messages"))
         }
 

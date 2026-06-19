@@ -34,6 +34,9 @@ class BootReceiver : BroadcastReceiver() {
     @Inject lateinit var prefs: Preferences
 
     override fun onReceive(context: Context, intent: Intent?) {
+        val action = intent?.action
+        if (action != Intent.ACTION_BOOT_COMPLETED && action != "android.intent.action.LOCKED_BOOT_COMPLETED") return
+
         AndroidInjection.inject(this, context)
 
         val result = goAsync()

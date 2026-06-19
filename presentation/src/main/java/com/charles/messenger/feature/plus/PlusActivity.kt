@@ -106,7 +106,6 @@ class PlusActivity : QkThemedActivity(), PlusView {
         }
         description = when {
             descriptionViewFound is TextView -> descriptionViewFound
-            descriptionViewFound is com.charles.messenger.common.widget.QkTextView -> descriptionViewFound as TextView
             descriptionViewFound != null -> {
                 val foundType = descriptionViewFound.javaClass.simpleName
                 Timber.e("Description view (id: description) is not a TextView. Found: $foundType")

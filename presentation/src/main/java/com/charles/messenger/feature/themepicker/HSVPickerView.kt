@@ -110,7 +110,7 @@ class HSVPickerView @JvmOverloads constructor(
                     val x = (event.rawX + hueThumbX + min).within(min, max)
 
                     hueThumb.x = x
-                    hue = (hueThumb.x - min) / (max - min) * 360
+                    hue = ((hueThumb.x - min) / (max - min)) * 360
 
                     updateSelectedColor()
                 }

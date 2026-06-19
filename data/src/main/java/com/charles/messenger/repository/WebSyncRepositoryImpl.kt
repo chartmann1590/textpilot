@@ -126,7 +126,6 @@ class WebSyncRepositoryImpl @Inject constructor(
                 val responseBody = response.body?.string()
 
                 if (response.isSuccessful && responseBody != null) {
-                    val loginResponse = moshi.adapter(LoginResponse::class.java).fromJson(responseBody)
                     Timber.d("Login successful, received tokens")
                     true
                 } else {

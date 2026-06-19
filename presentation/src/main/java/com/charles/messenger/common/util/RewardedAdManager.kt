@@ -145,7 +145,7 @@ class RewardedAdManager @Inject constructor(
         // Calculate ad-free time based on points
         // 1 point = 30 minutes
         val adFreeMinutes = points * 30
-        val adFreeMillis = adFreeMinutes * 60 * 1000L
+        val adFreeMillis = adFreeMinutes.toLong() * 60L * 1000L
 
         // Add to existing ad-free time if already active
         val currentAdFreeEndTime = prefs.adFreeEndTime.get()

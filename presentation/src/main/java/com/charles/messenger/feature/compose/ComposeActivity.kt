@@ -248,15 +248,13 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
                     if (totalItemCount > 0 && positionStart + itemCount - 1 >= totalItemCount - itemCount && 
                         lastVisiblePosition >= totalItemCount - itemCount - 3) {
                         val targetPosition = totalItemCount - 1
-                        if (targetPosition >= 0 && targetPosition < totalItemCount) {
-                            messageList.post {
-                                messageList.smoothScrollToPosition(targetPosition)
-                            }
+                        messageList.post {
+                            messageList.smoothScrollToPosition(targetPosition)
                         }
                     }
                 }
             }
-            
+
             override fun onChanged() {
                 val layoutManager = messageList.layoutManager as? LinearLayoutManager ?: return
                 if (layoutManager.stackFromEnd) {
@@ -265,10 +263,8 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
                     // Scroll if user is already near the bottom (within 3 items) and there are items
                     if (totalItemCount > 0 && lastVisiblePosition >= totalItemCount - 3) {
                         val targetPosition = totalItemCount - 1
-                        if (targetPosition >= 0 && targetPosition < totalItemCount) {
-                            messageList.post {
-                                messageList.smoothScrollToPosition(targetPosition)
-                            }
+                        messageList.post {
+                            messageList.smoothScrollToPosition(targetPosition)
                         }
                     }
                 }

@@ -49,9 +49,8 @@ class CredentialManager @Inject constructor(
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             )
         } catch (e: Exception) {
-            Timber.e(e, "Failed to create encrypted preferences, falling back to regular prefs")
-            // Fallback to regular SharedPreferences if EncryptedSharedPreferences fails
-            context.getSharedPreferences("web_sync_credentials_fallback", Context.MODE_PRIVATE)
+            Timber.e(e, "Failed to create encrypted preferences")
+            throw e
         }
     }
 
