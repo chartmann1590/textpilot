@@ -27,8 +27,18 @@
 # Animal Sniffer compileOnly dependency to ensure APIs are compatible with older versions of Java.
 -dontwarn org.codehaus.mojo.animal_sniffer.*
 
-# OkHttp platform used only on JVM and when Conscrypt dependency is available.
+# OkHttp optional TLS platform integrations (not in our deps)
 -dontwarn okhttp3.internal.platform.ConscryptPlatform
+-dontwarn okhttp3.internal.platform.**
+-dontwarn org.bouncycastle.jsse.BCSSLParameters
+-dontwarn org.bouncycastle.jsse.BCSSLSocket
+-dontwarn org.bouncycastle.jsse.provider.BouncyCastleJsseProvider
+-dontwarn org.conscrypt.Conscrypt
+-dontwarn org.conscrypt.Conscrypt$Version
+-dontwarn org.conscrypt.ConscryptHostnameVerifier
+-dontwarn org.openjsse.javax.net.ssl.SSLParameters
+-dontwarn org.openjsse.javax.net.ssl.SSLSocket
+-dontwarn org.openjsse.net.ssl.OpenJSSE
 
 # moshi
 # JSR 305 annotations are for embedding nullability information.
@@ -125,6 +135,9 @@
 
 # Keep Application Code (Prevent aggressive shrinking destroying functionality)
 -keep class com.charles.messenger.** { *; }
+
+# Keep LiteRT-LM JNI bridge classes and members used by native reflection/JNI lookups
+-keep class com.google.ai.edge.litertlm.** { *; }
 
 # Keep debug logging code for runtime debugging
 -keep class com.charles.messenger.feature.themepicker.ThemePickerController { *; }

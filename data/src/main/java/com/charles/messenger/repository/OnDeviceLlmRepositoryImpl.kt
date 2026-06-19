@@ -30,6 +30,7 @@ class OnDeviceLlmRepositoryImpl @Inject constructor(
 
     companion object {
         private const val MODEL_DIR_NAME = "ai-models"
+        private const val SMART_REPLY_MAX_TOKENS = 2048
 
         private val catalog = listOf(
             AiModelOption(
@@ -237,14 +238,17 @@ class OnDeviceLlmRepositoryImpl @Inject constructor(
         val effectiveModelName = modelName.trim().ifEmpty { modelFile.nameWithoutExtension }
         require(effectiveModelName.isNotBlank()) { "Select a model such as Gemma or Qwen first" }
 
-        createEngine(modelFile.absolutePath).use { engine ->
-            engine.initialize()
-            engine.createConversation().use { }
-            if (warmupOnly) {
+        if (warmupOnly) {
+            // Warmup is useful when selecting a model, but doing this again immediately before
+            // generation can cause unnecessary native memory pressure on large downloaded models.
+            createEngine(modelFile.absolutePath).use { engine ->
+                engine.initialize()
+                engine.createConversation().use { }
                 Timber.d("Validated on-device model: $effectiveModelName")
             }
-            return effectiveModelName
         }
+
+        return effectiveModelName
     }
 
     private fun createEngine(modelPath: String): Engine {
@@ -254,6 +258,7 @@ class OnDeviceLlmRepositoryImpl @Inject constructor(
         val engineConfig = EngineConfig(
             modelPath = modelPath,
             backend = Backend.CPU(),
+            maxNumTokens = SMART_REPLY_MAX_TOKENS,
             cacheDir = cacheDir.absolutePath
         )
 

@@ -7,10 +7,13 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import com.bluelinelabs.conductor.RouterTransaction
 import com.charles.messenger.R
+import com.charles.messenger.common.QkChangeHandler
 import com.charles.messenger.common.base.QkController
 import com.charles.messenger.common.widget.PreferenceView
 import com.charles.messenger.common.widget.QkSwitch
+import com.charles.messenger.feature.settings.ai.tutorial.AiTutorialController
 import com.charles.messenger.injection.appComponent
 import com.charles.messenger.model.AiModelOption
 import com.charles.messenger.model.AiProvider
@@ -33,6 +36,7 @@ class AiSettingsController : QkController<AiSettingsView, AiSettingsState, AiSet
 
     private lateinit var preferences: LinearLayout
     private lateinit var aiEnabled: PreferenceView
+    private lateinit var aiTutorial: PreferenceView
     private lateinit var providerSelection: PreferenceView
     private lateinit var ollamaUrl: PreferenceView
     private lateinit var modelSelection: PreferenceView
@@ -58,6 +62,7 @@ class AiSettingsController : QkController<AiSettingsView, AiSettingsState, AiSet
 
         preferences = view.findViewById(R.id.preferences)
         aiEnabled = view.findViewById(R.id.aiEnabled)
+        aiTutorial = view.findViewById(R.id.aiTutorial)
         providerSelection = view.findViewById(R.id.providerSelection)
         ollamaUrl = view.findViewById(R.id.ollamaUrl)
         modelSelection = view.findViewById(R.id.modelSelection)
@@ -94,6 +99,14 @@ class AiSettingsController : QkController<AiSettingsView, AiSettingsState, AiSet
         aiSignatureEnabled.setOnClickListener {
             val switch = aiSignatureEnabled.widget?.findViewById<QkSwitch>(R.id.checkbox)
             switch?.isChecked = !(switch?.isChecked ?: false)
+        }
+
+        aiTutorial.setOnClickListener {
+            router.pushController(
+                RouterTransaction.with(AiTutorialController())
+                    .pushChangeHandler(QkChangeHandler())
+                    .popChangeHandler(QkChangeHandler())
+            )
         }
     }
 

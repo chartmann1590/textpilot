@@ -80,6 +80,8 @@ class MainViewModel @Inject constructor(
     private val syncMessages: SyncMessages
 ) : QkViewModel<MainView, MainState>(MainState(page = Inbox(data = conversationRepo.getConversations()))) {
 
+    private var launchedAiTutorial = false
+
     init {
         disposables += deleteConversations
         disposables += markAllSeen
@@ -136,6 +138,11 @@ class MainViewModel @Inject constructor(
 
     override fun bindView(view: MainView) {
         super.bindView(view)
+
+        if (!prefs.aiTutorialSeen.get() && !launchedAiTutorial) {
+            launchedAiTutorial = true
+            navigator.showAiTutorial()
+        }
 
         when {
             !permissionManager.isDefaultSms() -> view.requestDefaultSms()

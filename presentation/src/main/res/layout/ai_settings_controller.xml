@@ -44,6 +44,15 @@
         <View style="@style/Divider" />
 
         <com.charles.messenger.common.widget.PreferenceView
+            android:id="@+id/aiTutorial"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:title="@string/ai_settings_tutorial_title"
+            app:summary="@string/ai_settings_tutorial_summary" />
+
+        <View style="@style/Divider" />
+
+        <com.charles.messenger.common.widget.PreferenceView
             android:id="@+id/providerSelection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
