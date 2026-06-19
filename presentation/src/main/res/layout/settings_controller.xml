@@ -255,6 +255,14 @@
             tools:summary="7 days remaining" />
 
         <com.charles.messenger.common.widget.PreferenceView
+            android:id="@+id/feedback"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/ic_baseline_bug_report_24"
+            app:title="@string/settings_feedback_title"
+            app:summary="@string/settings_feedback_summary" />
+
+        <com.charles.messenger.common.widget.PreferenceView
             android:id="@+id/about"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

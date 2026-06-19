@@ -18,6 +18,7 @@
  */
 package com.charles.messenger.feature.settings
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.ViewGroup
 import com.bluelinelabs.conductor.Conductor
@@ -26,6 +27,7 @@ import com.bluelinelabs.conductor.RouterTransaction
 import com.charles.messenger.R
 import com.charles.messenger.common.base.QkThemedActivity
 import com.charles.messenger.feature.settings.ai.AiSettingsController
+import com.charles.messenger.feature.settings.ai.tutorial.AiTutorialController
 import com.charles.messenger.feature.settings.websync.WebSyncSettingsController
 import dagger.android.AndroidInjection
 
@@ -44,6 +46,7 @@ class SettingsActivity : QkThemedActivity() {
             val screen = intent.getStringExtra("screen")
             val controller = when (screen) {
                 "ai_settings" -> AiSettingsController()
+                "ai_tutorial" -> AiTutorialController()
                 "web_sync" -> WebSyncSettingsController()
                 else -> SettingsController()
             }
@@ -55,6 +58,11 @@ class SettingsActivity : QkThemedActivity() {
         if (!router.handleBack()) {
             super.onBackPressed()
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        router.onActivityResult(requestCode, resultCode, data)
     }
 
 }

@@ -23,7 +23,8 @@ apply plugin: 'kotlin-kapt'
 // Google services plugins are conditionally applied at the bottom of this file
 
 android {
-    compileSdkVersion 34
+    namespace "com.charles.messenger"
+    compileSdk 34
     flavorDimensions "analytics"
 
     def localProperties = new Properties()
@@ -36,6 +37,20 @@ android {
     def ciVersionCodeEnv = System.getenv("CI_VERSION_CODE")
     def resolvedCiVersionCode = (ciVersionCodeProp ?: ciVersionCodeEnv)?.toString()?.trim()
 
+    // GitHub feedback integration — read from local.properties or CI environment secrets
+    def githubApiToken = ""
+    def githubRepoOwner = "chartmann1590"
+    def githubRepoName = "textpilot"
+    if (System.getenv("CI") == "true") {
+        githubApiToken = System.getenv("GH_API_TOKEN") ?: ""
+        githubRepoOwner = System.getenv("GH_REPO_OWNER") ?: "chartmann1590"
+        githubRepoName = System.getenv("GH_REPO_NAME") ?: "textpilot"
+    } else {
+        githubApiToken = localProperties.getProperty("github.api.token", "")
+        githubRepoOwner = localProperties.getProperty("github.repo.owner", "chartmann1590")
+        githubRepoName = localProperties.getProperty("github.repo.name", "textpilot")
+    }
+
     defaultConfig {
 
         configurations.all {
@@ -43,8 +58,8 @@ android {
         }
 
         applicationId "com.charles.messenger.v2"
-        minSdkVersion 21
-        targetSdkVersion 35
+        minSdk 21
+        targetSdk 35
         versionCode resolvedCiVersionCode?.isInteger() ? resolvedCiVersionCode.toInteger() : 2229
         versionName "3.10.2"
         setProperty("archivesBaseName", "messenger-v${versionName}")
@@ -64,6 +79,12 @@ android {
         buildConfigField "String", "ADMOB_INTERSTITIAL_ID", "\"" + admobInterstitialId + "\""
         buildConfigField "String", "ADMOB_REWARDED_ID", "\"" + admobRewardedId + "\""
         buildConfigField "Boolean", "USE_TEST_ADS", "false"
+
+        // GitHub feedback — values from local.properties or CI secrets (never hardcoded)
+        buildConfigField "String", "GITHUB_API_TOKEN", "\"${githubApiToken}\""
+        buildConfigField "String", "GITHUB_REPO_OWNER", "\"${githubRepoOwner}\""
+        buildConfigField "String", "GITHUB_REPO_NAME", "\"${githubRepoName}\""
+        buildConfigField "String", "FEEDBACK_ASSETS_DIR", "\"feedback-assets\""
         resValue "string", "admob_banner_id", "\"" + admobBannerId + "\""
         resValue "string", "admob_native_advanced_id", "\"" + admobNativeAdvancedId + "\""
         manifestPlaceholders = [ADMOB_APP_ID: admobAppId]
@@ -106,17 +127,15 @@ android {
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 
-    lintOptions {
-        // Skip lint in release builds to avoid blocking on tooling mismatches
+    lint {
         checkReleaseBuilds false
         abortOnError false
     }
 
-    // AGP 7.x compatibility: package native libs in legacy mode so installation
-    // extracts them instead of requiring page-aligned direct APK loading.
-    packagingOptions {
+    packaging {
         jniLibs {
             useLegacyPackaging true
         }

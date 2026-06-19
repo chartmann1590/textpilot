@@ -282,6 +282,8 @@ class SettingsPresenter @Inject constructor(
                         }
 
                         R.id.webSyncSettings -> view.showWebSyncSettings()
+
+                        R.id.feedback -> view.showFeedback()
                             }
                             // #region agent log
                             com.charles.messenger.util.DebugLogger.log(

@@ -46,6 +46,7 @@ import com.charles.messenger.common.widget.QkSwitch
 import com.charles.messenger.common.widget.TextInputDialog
 import com.charles.messenger.feature.settings.about.AboutController
 import com.charles.messenger.feature.settings.autodelete.AutoDeleteDialog
+import com.charles.messenger.feature.settings.feedback.FeedbackController
 import com.charles.messenger.feature.settings.swipe.SwipeActionsController
 import com.charles.messenger.feature.themepicker.ThemePickerController
 import com.charles.messenger.injection.appComponent
@@ -387,6 +388,12 @@ class SettingsController : QkController<SettingsView, SettingsState, SettingsPre
 
     override fun showWebSyncSettings() {
         router?.pushController(RouterTransaction.with(com.charles.messenger.feature.settings.websync.WebSyncSettingsController())
+                .pushChangeHandler(QkChangeHandler())
+                .popChangeHandler(QkChangeHandler()))
+    }
+
+    override fun showFeedback() {
+        router?.pushController(RouterTransaction.with(FeedbackController())
                 .pushChangeHandler(QkChangeHandler())
                 .popChangeHandler(QkChangeHandler()))
     }

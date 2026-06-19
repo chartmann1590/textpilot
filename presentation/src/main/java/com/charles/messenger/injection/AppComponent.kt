@@ -38,6 +38,8 @@ import com.charles.messenger.feature.conversationinfo.injection.ConversationInfo
 import com.charles.messenger.feature.settings.SettingsController
 import com.charles.messenger.feature.settings.about.AboutController
 import com.charles.messenger.feature.settings.ai.AiSettingsController
+import com.charles.messenger.feature.settings.feedback.FeedbackController
+import com.charles.messenger.feature.settings.ai.tutorial.AiTutorialController
 import com.charles.messenger.feature.settings.swipe.SwipeActionsController
 import com.charles.messenger.feature.settings.websync.WebSyncSettingsController
 import com.charles.messenger.feature.themepicker.injection.ThemePickerComponent
@@ -71,6 +73,8 @@ interface AppComponent {
     fun inject(controller: BlockingManagerController)
     fun inject(controller: SettingsController)
     fun inject(controller: AiSettingsController)
+    fun inject(controller: AiTutorialController)
+    fun inject(controller: FeedbackController)
     fun inject(controller: SwipeActionsController)
     fun inject(controller: WebSyncSettingsController)
 

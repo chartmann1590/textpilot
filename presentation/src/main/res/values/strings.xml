@@ -578,6 +578,26 @@
     <string name="ai_settings_signature_preview">Preview:</string>
     <string name="ai_settings_signature_example">Example message text</string>
     <string name="ai_settings_persona_not_set">Not set</string>
+    <string name="ai_settings_tutorial_title">Smart Reply tutorial</string>
+    <string name="ai_settings_tutorial_summary">Learn how Smart Reply works and set up On-device or Ollama</string>
+
+    <string name="ai_tutorial_title">Smart Reply Tutorial</string>
+    <string name="ai_tutorial_step">Step %1$d of %2$d</string>
+    <string name="ai_tutorial_back">Back</string>
+    <string name="ai_tutorial_finish">Open settings</string>
+    <string name="ai_tutorial_selected">Selected</string>
+    <string name="ai_tutorial_tap_to_choose">Tap to choose</string>
+    <string name="ai_tutorial_not_supported">Not supported on this device</string>
+    <string name="ai_tutorial_welcome_title">Write faster with Smart Reply</string>
+    <string name="ai_tutorial_welcome_body">Smart Reply suggests message replies using your selected AI provider. You can generate suggestions in conversations, review them, and send only what you approve.</string>
+    <string name="ai_tutorial_provider_title">Choose where AI runs</string>
+    <string name="ai_tutorial_provider_body">You can switch providers any time from Smart Reply settings. Pick the one that fits your setup:</string>
+    <string name="ai_tutorial_on_device_title">On-device LiteRT</string>
+    <string name="ai_tutorial_on_device_body">Runs locally on your phone after downloading a model. Available managed models include Gemma 4 E2B (2.58 GB) and Qwen 3 0.6B (614 MB).</string>
+    <string name="ai_tutorial_ollama_title">Ollama Server</string>
+    <string name="ai_tutorial_ollama_body">Uses an Ollama endpoint you control (local network or localhost). Good for larger models and shared compute.</string>
+    <string name="ai_tutorial_finish_title">You are ready to configure Smart Reply</string>
+    <string name="ai_tutorial_finish_body">Next, open Smart Reply settings to enable AI, pick a model, and validate your provider connection.</string>
 
     <!-- Auto-Reply Notification -->
     <string name="ai_auto_reply_notification_title">AI Auto-Reply Active</string>
@@ -615,5 +635,38 @@
     <string name="web_sync_not_synced">Not synced yet</string>
     <string name="web_sync_last_synced">Last synced: %s</string>
     <string name="web_sync_help_text">To use Web Sync, you need to self-host the web interface:\n\n1. Clone the repository: https://github.com/chartmann1590/textpilot\n2. Install dependencies: npm install\n3. Configure .env file with your settings\n4. Start the server: npm start\n5. Enter your server URL above (e.g., http://192.168.1.100:3000)\n\nFor Docker deployment and detailed instructions, visit the GitHub repository.</string>
+
+    <!-- Support & Feedback -->
+    <string name="settings_feedback_title">Support &amp; Feedback</string>
+    <string name="settings_feedback_summary">Report issues and track your feedback</string>
+    <string name="feedback_title">Support &amp; Feedback</string>
+    <string name="feedback_report_problem">Report a Problem</string>
+    <string name="feedback_submitted_reports_header">Submitted Reports</string>
+    <string name="feedback_no_reports">No reports submitted yet.</string>
+    <string name="feedback_warning_text">Your report will be submitted to this app\'s GitHub issue tracker. Do not include passwords, private keys, medical information, financial information, or anything you do not want visible to the repository maintainers. If this repository is public, your report may be publicly visible. Screenshots may contain private information — review carefully before attaching.</string>
+    <string name="feedback_dialog_title">Report a Problem</string>
+    <string name="feedback_title_hint">Title / Subject (required)</string>
+    <string name="feedback_description_hint">Description (required)</string>
+    <string name="feedback_name_hint">Your name (optional)</string>
+    <string name="feedback_email_hint">Email address (optional)</string>
+    <string name="feedback_include_diagnostics">Include device diagnostics</string>
+    <string name="feedback_attach_screenshot">Attach Screenshot</string>
+    <string name="feedback_clear_image">Clear</string>
+    <string name="feedback_submit">Submit</string>
+    <string name="feedback_field_required">This field is required</string>
+    <string name="feedback_submitted_ok">Issue #%d created successfully!</string>
+    <string name="feedback_submit_failed">Submission failed: %s</string>
+    <string name="feedback_image_upload_failed">Image upload failed: %s</string>
+    <string name="feedback_config_error">GitHub API not configured. Add github.api.token, github.repo.owner, and github.repo.name to local.properties.</string>
+    <string name="feedback_issue_details_title">Issue Details</string>
+    <string name="feedback_issue_header">#%1$d: %2$s</string>
+    <string name="feedback_loading_comments">Loading comments…</string>
+    <string name="feedback_no_comments">No comments yet.</string>
+    <string name="feedback_post_reply">Post Reply</string>
+    <string name="feedback_post_reply_label">Post a Reply</string>
+    <string name="feedback_reply_hint">Write a reply…</string>
+    <string name="feedback_close">Close</string>
+    <string name="feedback_comment_posted">Comment posted.</string>
+    <string name="feedback_comment_failed">Failed to post comment: %s</string>
 
 </resources>
