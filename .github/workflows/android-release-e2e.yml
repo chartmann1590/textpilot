@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CI: "true"
-      CI_VERSION_CODE: ${{ github.run_number }}
+      CI_VERSION_CODE: ${{ 3000 + github.run_number }}
       ADB_INSTALL_TIMEOUT: "10"
       keystore_password: ${{ secrets.STORE_PASSWORD }}
       key_alias: ${{ secrets.KEY_ALIAS }}

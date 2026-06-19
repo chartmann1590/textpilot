@@ -60,7 +60,7 @@ android {
         applicationId "com.charles.messenger.v2"
         minSdk 21
         targetSdk 35
-        versionCode resolvedCiVersionCode?.isInteger() ? resolvedCiVersionCode.toInteger() : 2229
+        versionCode resolvedCiVersionCode?.isInteger() ? resolvedCiVersionCode.toInteger() : 3000
         versionName "3.10.2"
         setProperty("archivesBaseName", "messenger-v${versionName}")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
