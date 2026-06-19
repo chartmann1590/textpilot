@@ -60,7 +60,7 @@ jobs:
           echo "${{ secrets.GOOGLE_SERVICES_JSON_B64 }}" | base64 -d > presentation/google-services.json
 
       - name: Build release artifacts
-        run: ./gradlew :presentation:assembleWithAnalyticsRelease :presentation:bundleWithAnalyticsRelease --stacktrace
+        run: ./gradlew :presentation:assembleWithAnalyticsRelease :presentation:bundleWithAnalyticsRelease :presentation:assembleNoAnalyticsRelease --stacktrace
 
       - name: Build instrumentation test APKs
         run: ./gradlew :presentation:assembleNoAnalyticsDebug :presentation:assembleNoAnalyticsDebugAndroidTest --stacktrace
@@ -112,9 +112,10 @@ jobs:
       - name: Upload APK and AAB artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: withanalytics-release-artifacts-${{ github.sha }}
+          name: release-artifacts-${{ github.sha }}
           path: |
             presentation/build/outputs/apk/withAnalytics/release/*.apk
+            presentation/build/outputs/apk/noAnalytics/release/*.apk
             presentation/build/outputs/bundle/withAnalyticsRelease/*.aab
 
       - name: Build release tag metadata
@@ -138,4 +139,5 @@ jobs:
           artifactErrorsFailBuild: true
           artifacts: |
             presentation/build/outputs/apk/withAnalytics/release/*.apk
+            presentation/build/outputs/apk/noAnalytics/release/*.apk
             presentation/build/outputs/bundle/withAnalyticsRelease/*.aab
