@@ -39,19 +39,14 @@ class CredentialManager @Inject constructor(
             .build()
     }
 
-    private val encryptedPrefs: SharedPreferences by lazy {
-        try {
-            EncryptedSharedPreferences.create(
-                context,
-                "web_sync_credentials",
-                masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to create encrypted preferences")
-            throw e
-        }
+    private val encryptedPrefs: EncryptedSharedPreferences by lazy {
+        EncryptedSharedPreferences.create(
+            context,
+            "web_sync_credentials",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
     }
 
     /**
