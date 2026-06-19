@@ -89,8 +89,6 @@ wait_for_emulator_ready() {
         "${ADB}" devices -l
         adb_device shell getprop ro.build.version.release || true
         adb_device shell getprop ro.build.version.sdk || true
-        # Extra stabilization: wait for ddmlib API level to settle before AGP 8.x UTP connects
-        sleep 10
         return 0
       fi
     else
@@ -109,8 +107,18 @@ wait_for_emulator_ready() {
 }
 
 run_connected_tests() {
+  # Restart ADB server so AGP 8.x UTP/ddmlib gets a fresh connection and reads
+  # the correct API level (stale ddmlib cache causes "API level=1" errors).
+  "${ADB}" kill-server 2>/dev/null || true
+  "${ADB}" start-server
+  serial="${ANDROID_SERIAL:-}"
+  if [ -n "${serial}" ]; then
+    "${ADB}" -s "${serial}" wait-for-device 2>/dev/null || true
+  else
+    "${ADB}" wait-for-device 2>/dev/null || true
+  fi
+  sleep 3
   ./gradlew :presentation:connectedNoAnalyticsDebugAndroidTest \
-    -Pandroid.experimental.androidTest.useUnifiedTestPlatform=false \
     --stacktrace --no-daemon
 }
 
