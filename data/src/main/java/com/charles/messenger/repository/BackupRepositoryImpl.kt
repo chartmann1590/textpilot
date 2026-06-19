@@ -182,11 +182,11 @@ class BackupRepositoryImpl @Inject constructor(
             moshi.adapter(Backup::class.java).fromJson(source)
         }
 
-        val messages = backup?.messages ?: emptyList()
-        val messageCount = messages.size
+        val messages = backup?.messages
+        val messageCount = messages?.size ?: 0
         var errorCount = 0
 
-        messages.forEachIndexed { index, message ->
+        messages?.forEachIndexed { index, message ->
             if (stopFlag) {
                 stopFlag = false
                 restoreProgress.onNext(BackupRepository.Progress.Idle())
@@ -222,8 +222,10 @@ class BackupRepositoryImpl @Inject constructor(
             }
         }
 
-        if (errorCount > 0) {
-            Timber.w(Exception("Failed to backup $errorCount/$messageCount messages"))
+        messages?.let {
+            if (errorCount > 0) {
+                Timber.w(Exception("Failed to backup $errorCount/$messageCount messages"))
+            }
         }
 
         // Sync the messages

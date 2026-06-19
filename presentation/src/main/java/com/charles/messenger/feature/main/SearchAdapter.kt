@@ -101,8 +101,9 @@ class SearchAdapter @Inject constructor(
 
     override fun areItemsTheSame(old: SearchResult, new: SearchResult): Boolean {
         val sameId = old.conversation.id == new.conversation.id
-        val sameHasMessages = (old.messages > 0) == (new.messages > 0)
-        return sameId && sameHasMessages
+        val oldHasMessages = old.messages > 0
+        val newHasMessages = new.messages > 0
+        return sameId && oldHasMessages == newHasMessages
     }
 
     override fun areContentsTheSame(old: SearchResult, new: SearchResult): Boolean {
