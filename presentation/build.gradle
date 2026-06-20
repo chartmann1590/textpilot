@@ -36,6 +36,7 @@ android {
     def ciVersionCodeProp = project.findProperty("ciVersionCode")
     def ciVersionCodeEnv = System.getenv("CI_VERSION_CODE")
     def resolvedCiVersionCode = (ciVersionCodeProp ?: ciVersionCodeEnv)?.toString()?.trim()
+    def resolvedVersionCode = resolvedCiVersionCode?.isInteger() ? resolvedCiVersionCode.toInteger() : 3000
 
     // GitHub feedback integration — read from local.properties or CI environment secrets
     def githubApiToken = ""
@@ -60,14 +61,12 @@ android {
         applicationId "com.charles.messenger.v2"
         minSdk 21
         targetSdk 35
-        versionCode resolvedCiVersionCode?.isInteger() ? resolvedCiVersionCode.toInteger() : 3000
+        versionCode resolvedVersionCode
         versionName "3.10.2"
-        setProperty("archivesBaseName", "messenger-v${versionName}")
+        setProperty("archivesBaseName", "messenger-v${versionName}-${resolvedVersionCode}")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         multiDexKeepProguard file('multidex-config.pro')
-
-        setProperty("archivesBaseName", "messenger-v${versionName}")
 
         // AdMob IDs
         def admobInterstitialId = 'ca-app-pub-8382831211800454/9644132901'
