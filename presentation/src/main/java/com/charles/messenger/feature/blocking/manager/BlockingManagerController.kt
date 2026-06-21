@@ -39,14 +39,15 @@ class BlockingManagerController : QkController<BlockingManagerView, BlockingMana
 
     override fun onAttach(view: View) {
         super.onAttach(view)
-        presenter.bindIntents(this)
-        setTitle(R.string.blocking_manager_title)
-        showBackButton(true)
 
         qksms = view.findViewById(R.id.qksms)
         callBlocker = view.findViewById(R.id.callBlocker)
         callControl = view.findViewById(R.id.callControl)
         shouldIAnswer = view.findViewById(R.id.shouldIAnswer)
+
+        presenter.bindIntents(this)
+        setTitle(R.string.blocking_manager_title)
+        showBackButton(true)
 
         val states = arrayOf(
                 intArrayOf(android.R.attr.state_activated),

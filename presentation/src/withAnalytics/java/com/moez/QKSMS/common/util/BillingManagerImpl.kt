@@ -275,9 +275,10 @@ class BillingManagerImpl @Inject constructor(
                         hypothesisId = "H5"
                     )
                     // #endregion
-                    // Check for errors that might cause ProxyBillingActivity crash
                     if (result.responseCode != BillingClient.BillingResponseCode.OK) {
-                        Timber.w("Billing flow launch returned error: ${result.responseCode}, ${result.debugMessage}")
+                        val errorMsg = "Billing flow launch failed: ${result.responseCode}, ${result.debugMessage}"
+                        Timber.w(errorMsg)
+                        throw BillingUnavailableException(errorMsg)
                     }
                 } catch (e: NullPointerException) {
                     // Handle ProxyBillingActivity crash - PendingIntent is null

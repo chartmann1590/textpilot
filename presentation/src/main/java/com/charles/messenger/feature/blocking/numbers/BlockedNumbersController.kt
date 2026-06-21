@@ -25,7 +25,7 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import android.widget.ImageView
 import com.jakewharton.rxbinding2.view.clicks
 import com.charles.messenger.R
 import com.charles.messenger.common.base.QkController
@@ -46,7 +46,7 @@ class BlockedNumbersController : QkController<BlockedNumbersView, BlockedNumbers
     @Inject lateinit var colors: Colors
     @Inject lateinit var phoneNumberUtils: PhoneNumberUtils
 
-    private lateinit var add: FloatingActionButton
+    private lateinit var add: ImageView
     private lateinit var empty: TextView
     private lateinit var numbers: RecyclerView
 
