@@ -71,14 +71,7 @@ class OllamaRepositoryImpl @Inject constructor(
 
     override fun getAvailableModels(baseUrl: String): Single<List<OllamaModel>> {
         return Single.fromCallable {
-            // #region agent log
-            com.charles.messenger.util.DebugLogger.log(
-                location = "OllamaRepositoryImpl.kt:48",
-                message = "getAvailableModels called",
-                data = mapOf("baseUrl" to baseUrl),
-                hypothesisId = "H4"
-            )
-            // #endregion
+
             try {
                 val url = "${baseUrl.trimEnd('/')}$TAGS_ENDPOINT"
                 Timber.d("Fetching models from: $url")
@@ -104,47 +97,16 @@ class OllamaRepositoryImpl @Inject constructor(
                 Timber.d("Fetched ${modelsResponse.models.size} models")
                 modelsResponse.models
             } catch (e: java.net.SocketException) {
-                // #region agent log
-                com.charles.messenger.util.DebugLogger.log(
-                    location = "OllamaRepositoryImpl.kt:74",
-                    message = "SocketException caught and handled",
-                    data = mapOf("error" to e.message, "errorType" to "SocketException"),
-                    hypothesisId = "H4"
-                )
-                // #endregion
-                Timber.w(e, "Socket error while fetching models (expected network failure)")
+                Timber.w("Socket error while fetching models (expected network failure): ${e.message}")
                 throw Exception("Connection error: ${e.message}", e)
             } catch (e: android.system.ErrnoException) {
-                // #region agent log
-                com.charles.messenger.util.DebugLogger.log(
-                    location = "OllamaRepositoryImpl.kt:77",
-                    message = "ErrnoException caught and handled",
-                    data = mapOf("error" to e.message, "errorType" to "ErrnoException"),
-                    hypothesisId = "H4"
-                )
-                // #endregion
-                Timber.w(e, "Connection error while fetching models (expected network failure)")
+                Timber.w("Connection error while fetching models (expected network failure): ${e.message}")
                 throw Exception("Connection refused: ${e.message}", e)
             } catch (e: java.net.UnknownHostException) {
-                // #region agent log
-                com.charles.messenger.util.DebugLogger.log(
-                    location = "OllamaRepositoryImpl.kt:84",
-                    message = "UnknownHostException caught and handled",
-                    data = mapOf("error" to e.message, "errorType" to "UnknownHostException"),
-                    hypothesisId = "H4"
-                )
-                // #endregion
-                Timber.w(e, "Unknown host error while fetching models (expected network failure)")
+                Timber.w("Unknown host error while fetching models (expected network failure): ${e.message}")
                 throw Exception("Unknown host: ${e.message}", e)
             } catch (e: Exception) {
-                // #region agent log
-                com.charles.messenger.util.DebugLogger.log(
-                    location = "OllamaRepositoryImpl.kt:91",
-                    message = "Generic Exception caught",
-                    data = mapOf("error" to e.message, "errorType" to e.javaClass.simpleName),
-                    hypothesisId = "H4"
-                )
-                // #endregion
+
                 Timber.e(e, "Error fetching models")
                 throw e
             }
@@ -250,27 +212,7 @@ class OllamaRepositoryImpl @Inject constructor(
     ): Single<List<String>> {
         return Single.fromCallable {
             try {
-                // #region agent log
-                try {
-                    val logFile = java.io.File("h:\\qksms\\.cursor\\debug.log")
-                    val logEntry = org.json.JSONObject().apply {
-                        put("timestamp", System.currentTimeMillis())
-                        put("location", "OllamaRepositoryImpl.kt:154")
-                        put("message", "Entry to generateReplySuggestions")
-                        put("data", org.json.JSONObject().apply {
-                            put("conversationContextSize", conversationContext.size)
-                            put("conversationContextNull", conversationContext == null)
-                            put("conversationContextEmpty", conversationContext.isEmpty())
-                        })
-                        put("sessionId", "debug-session")
-                        put("runId", "run1")
-                        put("hypothesisId", "H4")
-                    }
-                    java.io.FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to write debug log")
-                }
-                // #endregion
+
                 
                 val url = "${baseUrl.trimEnd('/')}$CHAT_ENDPOINT"
                 Timber.d("Generating replies from: $url with model: $model")
@@ -330,13 +272,13 @@ class OllamaRepositoryImpl @Inject constructor(
 
                 suggestions
             } catch (e: java.net.SocketException) {
-                Timber.w(e, "Socket error while generating replies (expected network failure)")
+                Timber.w("Socket error while generating replies (expected network failure): ${e.message}")
                 throw Exception("Connection error: ${e.message}", e)
             } catch (e: android.system.ErrnoException) {
-                Timber.w(e, "Connection error while generating replies (expected network failure)")
+                Timber.w("Connection error while generating replies (expected network failure): ${e.message}")
                 throw Exception("Connection refused: ${e.message}", e)
             } catch (e: java.net.UnknownHostException) {
-                Timber.w(e, "Unknown host error while generating replies (expected network failure)")
+                Timber.w("Unknown host error while generating replies (expected network failure): ${e.message}")
                 throw Exception("Unknown host: ${e.message}", e)
             } catch (e: Exception) {
                 Timber.e(e, "Error generating replies")
@@ -427,27 +369,7 @@ Remember: Use the conversation context to understand what's being discussed, but
      * Includes the last 3-5 messages to provide context, focusing on the most recent message from "Them"
      */
     private fun buildConversationContext(messages: List<Message>): String {
-        // #region agent log
-        try {
-            val logFile = java.io.File("h:\\qksms\\.cursor\\debug.log")
-            val logEntry = org.json.JSONObject().apply {
-                put("timestamp", System.currentTimeMillis())
-                put("location", "OllamaRepositoryImpl.kt:310")
-                put("message", "Entry to buildConversationContext")
-                put("data", org.json.JSONObject().apply {
-                    put("messagesSize", messages.size)
-                    put("messagesNull", messages == null)
-                    put("messagesEmpty", messages.isEmpty())
-                })
-                put("sessionId", "debug-session")
-                put("runId", "run1")
-                put("hypothesisId", "H5")
-            }
-            java.io.FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to write debug log")
-        }
-        // #endregion
+
         
         if (messages.isEmpty()) {
             Timber.w("No messages provided for smart reply generation")

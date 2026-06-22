@@ -322,7 +322,11 @@ class BillingManagerImpl @Inject constructor(
     override fun onPurchasesUpdated(result: BillingResult, purchases: MutableList<Purchase>?) {
         if (result.responseCode == BillingClient.BillingResponseCode.OK) {
             GlobalScope.launch(Dispatchers.IO) {
-                handlePurchases(purchases.orEmpty())
+                try {
+                    handlePurchases(purchases.orEmpty())
+                } catch (e: Exception) {
+                    Timber.w(e, "Error handling purchases")
+                }
             }
         }
     }
@@ -334,7 +338,11 @@ class BillingManagerImpl @Inject constructor(
         billingClient.queryPurchasesAsync(params) { billingResult, purchasesList ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                 GlobalScope.launch(Dispatchers.IO) {
-                    handlePurchases(purchasesList)
+                    try {
+                        handlePurchases(purchasesList)
+                    } catch (e: Exception) {
+                        Timber.w(e, "Error handling purchases query")
+                    }
                 }
             }
         }

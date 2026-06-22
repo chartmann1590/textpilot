@@ -720,53 +720,13 @@ class ComposeViewModel @Inject constructor(
                 .filter { prefs.aiReplyEnabled.get() }
                 .filter { prefs.hasConfiguredAiBackend() }
                 .doOnNext {
-                    // #region agent log
-                    try {
-                        val logFile = java.io.File("h:\\qksms\\.cursor\\debug.log")
-                        logFile.parentFile?.mkdirs()
-                        val logEntry = org.json.JSONObject().apply {
-                            put("timestamp", System.currentTimeMillis())
-                            put("location", "ComposeViewModel.kt:720")
-                            put("message", "Smart reply button clicked")
-                            put("data", org.json.JSONObject().apply {
-                                put("aiReplyEnabled", prefs.aiReplyEnabled.get())
-                                put("aiProvider", prefs.currentAiProvider().value)
-                                put("aiModel", prefs.currentAiModel())
-                            })
-                            put("sessionId", "debug-session")
-                            put("runId", "run1")
-                            put("hypothesisId", "H6")
-                        }
-                        java.io.FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-                    } catch (e: Exception) {
-                        Timber.e(e, "Failed to write debug log")
-                    }
-                    // #endregion
+
                     newState { copy(loadingSuggestions = true, showingSuggestions = false) }
                     view.showToast("Loading smart replies...")
                 }
                 .withLatestFrom(conversation) { _, conv -> conv }
                 .map { conv ->
-                    // #region agent log
-                    try {
-                        val logFile = java.io.File("h:\\qksms\\.cursor\\debug.log")
-                        val logEntry = org.json.JSONObject().apply {
-                            put("timestamp", System.currentTimeMillis())
-                            put("location", "ComposeViewModel.kt:748")
-                            put("message", "Entry to message retrieval map")
-                            put("data", org.json.JSONObject().apply {
-                                put("conversationNull", conv == null)
-                                put("conversationId", conv?.id ?: -1L)
-                            })
-                            put("sessionId", "debug-session")
-                            put("runId", "run1")
-                            put("hypothesisId", "H1")
-                        }
-                        java.io.FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-                    } catch (e: Exception) {
-                        Timber.e(e, "Failed to write debug log")
-                    }
-                    // #endregion
+
                     
                     // Get messages on main thread (Realm requires this)
                     // Use a fresh Realm instance to get messages synchronously and copy them
@@ -778,73 +738,16 @@ class ComposeViewModel @Inject constructor(
                             .sort("date")
                             .findAll()
                         
-                        // #region agent log
-                        try {
-                            val logFile = java.io.File("h:\\qksms\\.cursor\\debug.log")
-                            val logEntry = org.json.JSONObject().apply {
-                                put("timestamp", System.currentTimeMillis())
-                                put("location", "ComposeViewModel.kt:757")
-                                put("message", "After Realm query")
-                                put("data", org.json.JSONObject().apply {
-                                    put("realmMessagesSize", realmMessages.size)
-                                    put("threadId", conv.id)
-                                })
-                                put("sessionId", "debug-session")
-                                put("runId", "run1")
-                                put("hypothesisId", "H2")
-                            }
-                            java.io.FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-                        } catch (e: Exception) {
-                            Timber.e(e, "Failed to write debug log")
-                        }
-                        // #endregion
+
                         
                         // Copy to unmanaged list to use across threads
                         val allMessages = realm.copyFromRealm(realmMessages)
                         
-                        // #region agent log
-                        try {
-                            val logFile = java.io.File("h:\\qksms\\.cursor\\debug.log")
-                            val logEntry = org.json.JSONObject().apply {
-                                put("timestamp", System.currentTimeMillis())
-                                put("location", "ComposeViewModel.kt:760")
-                                put("message", "After copyFromRealm")
-                                put("data", org.json.JSONObject().apply {
-                                    put("allMessagesSize", allMessages.size)
-                                    put("allMessagesNull", allMessages == null)
-                                })
-                                put("sessionId", "debug-session")
-                                put("runId", "run1")
-                                put("hypothesisId", "H3")
-                            }
-                            java.io.FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-                        } catch (e: Exception) {
-                            Timber.e(e, "Failed to write debug log")
-                        }
-                        // #endregion
+
                         
                         val recentMessages = allMessages.takeLast(4)
 
-                        // #region agent log
-                        try {
-                            val logFile = java.io.File("h:\\qksms\\.cursor\\debug.log")
-                            val logEntry = org.json.JSONObject().apply {
-                                put("timestamp", System.currentTimeMillis())
-                                put("location", "ComposeViewModel.kt:761")
-                                put("message", "Before returning Pair")
-                                put("data", org.json.JSONObject().apply {
-                                    put("recentMessagesSize", recentMessages.size)
-                                    put("recentMessagesNull", recentMessages == null)
-                                })
-                                put("sessionId", "debug-session")
-                                put("runId", "run1")
-                                put("hypothesisId", "H4")
-                            }
-                            java.io.FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-                        } catch (e: Exception) {
-                            Timber.e(e, "Failed to write debug log")
-                        }
-                        // #endregion
+
 
                         Timber.d("ComposeViewModel: Retrieved ${allMessages.size} total messages, using last ${recentMessages.size} for smart reply")
                         recentMessages.forEachIndexed { index, msg ->
@@ -858,26 +761,7 @@ class ComposeViewModel @Inject constructor(
                 .observeOn(io.reactivex.schedulers.Schedulers.io())
                 .switchMap { (_, recentMessages) ->
                     val persona = prefs.aiPersona.get().takeIf { it.isNotEmpty() }
-                    // #region agent log
-                    try {
-                        val logFile = java.io.File("h:\\qksms\\.cursor\\debug.log")
-                        val logEntry = org.json.JSONObject().apply {
-                            put("timestamp", System.currentTimeMillis())
-                            put("location", "ComposeViewModel.kt:750")
-                            put("message", "About to generate smart replies")
-                            put("data", org.json.JSONObject().apply {
-                                put("messageCount", recentMessages.size)
-                                put("persona", persona ?: "none")
-                            })
-                            put("sessionId", "debug-session")
-                            put("runId", "run1")
-                            put("hypothesisId", "H6")
-                        }
-                        java.io.FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-                    } catch (e: Exception) {
-                        Timber.e(e, "Failed to write debug log")
-                    }
-                    // #endregion
+
                     generateSmartReplies.buildObservable(
                         com.charles.messenger.interactor.GenerateSmartReplies.Params(
                             provider = prefs.currentAiProvider(),
@@ -893,26 +777,7 @@ class ComposeViewModel @Inject constructor(
                 .autoDisposable(view.scope())
                 .subscribe(
                     { suggestions ->
-                        // #region agent log
-                        try {
-                            val logFile = java.io.File("h:\\qksms\\.cursor\\debug.log")
-                            val logEntry = org.json.JSONObject().apply {
-                                put("timestamp", System.currentTimeMillis())
-                                put("location", "ComposeViewModel.kt:775")
-                                put("message", "Smart reply suggestions received")
-                                put("data", org.json.JSONObject().apply {
-                                    put("suggestionCount", suggestions.size)
-                                    put("suggestions", org.json.JSONArray(suggestions))
-                                })
-                                put("sessionId", "debug-session")
-                                put("runId", "run1")
-                                put("hypothesisId", "H6")
-                            }
-                            java.io.FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-                        } catch (e: Exception) {
-                            Timber.e(e, "Failed to write debug log")
-                        }
-                        // #endregion
+
                         Timber.d("Generated ${suggestions.size} suggestions")
                         newState {
                             copy(

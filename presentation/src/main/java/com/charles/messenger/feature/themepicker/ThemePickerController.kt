@@ -82,194 +82,14 @@ class ThemePickerController(
     }
 
     override fun onViewCreated(view: View) {
-        // #region agent log
-        try {
-            val logFile = File("h:\\qksms\\.cursor\\debug.log")
-            val logEntry = org.json.JSONObject().apply {
-                put("timestamp", System.currentTimeMillis())
-                put("location", "ThemePickerController.kt:80")
-                put("message", "onViewCreated entry")
-                put("data", org.json.JSONObject().apply {
-                    put("viewType", view.javaClass.simpleName)
-                    put("viewId", view.id)
-                })
-                put("sessionId", "debug-session")
-                put("runId", "run1")
-                put("hypothesisId", "H3")
-            }
-            FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-        } catch (e: Exception) {}
-        // #endregion
-        
         pager = view.findViewById(R.id.pager)
         tabs = view.findViewById(R.id.tabs)
         materialColors = view.findViewById(R.id.materialColors)
-        
-        // #region agent log
-        try {
-            val logFile = File("h:\\qksms\\.cursor\\debug.log")
-            val hsvPickerView = view.findViewById<View>(R.id.hsvPicker)
-            val logEntry = org.json.JSONObject().apply {
-                put("timestamp", System.currentTimeMillis())
-                put("location", "ThemePickerController.kt:95")
-                put("message", "hsvPicker view check")
-                put("data", org.json.JSONObject().apply {
-                    put("hsvPickerFound", hsvPickerView != null)
-                    put("hsvPickerType", hsvPickerView?.javaClass?.simpleName ?: "null")
-                    put("hsvPickerId", hsvPickerView?.id ?: -1)
-                })
-                put("sessionId", "debug-session")
-                put("runId", "run1")
-                put("hypothesisId", "H3")
-            }
-            FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-        } catch (e: Exception) {}
-        // #endregion
-        
-        // #region agent log
-        try {
-            val logFile = File("h:\\qksms\\.cursor\\debug.log")
-            val pickerView = view.findViewById<View>(R.id.picker)
-            val logEntry = org.json.JSONObject().apply {
-                put("timestamp", System.currentTimeMillis())
-                put("location", "ThemePickerController.kt:104")
-                put("message", "picker view before assignment")
-                put("data", org.json.JSONObject().apply {
-                    put("pickerFound", pickerView != null)
-                    put("pickerType", pickerView?.javaClass?.simpleName ?: "null")
-                    put("pickerId", pickerView?.id ?: -1)
-                })
-                put("sessionId", "debug-session")
-                put("runId", "run1")
-                put("hypothesisId", "H3")
-            }
-            FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-        } catch (e: Exception) {}
-        // #endregion
-        
         picker = view.findViewById(R.id.picker)
-        
-        // #region agent log
-        try {
-            val logFile = File("h:\\qksms\\.cursor\\debug.log")
-            val clearView = view.findViewById<View>(R.id.clear)
-            val logEntry = org.json.JSONObject().apply {
-                put("timestamp", System.currentTimeMillis())
-                put("location", "ThemePickerController.kt:122")
-                put("message", "clear view before assignment")
-                put("data", org.json.JSONObject().apply {
-                    put("clearFound", clearView != null)
-                    put("clearType", clearView?.javaClass?.simpleName ?: "null")
-                    put("clearId", clearView?.id ?: -1)
-                    put("clearExpectedType", "ImageView")
-                })
-                put("sessionId", "debug-session")
-                put("runId", "run1")
-                put("hypothesisId", "H1")
-            }
-            FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-        } catch (e: Exception) {}
-        // #endregion
-        
-        try {
-            clear = view.findViewById(R.id.clear)
-        } catch (e: ClassCastException) {
-            // #region agent log
-            try {
-                val logFile = File("h:\\qksms\\.cursor\\debug.log")
-                val logEntry = org.json.JSONObject().apply {
-                    put("timestamp", System.currentTimeMillis())
-                    put("location", "ThemePickerController.kt:173")
-                    put("message", "ClassCastException on clear assignment")
-                    put("data", org.json.JSONObject().apply {
-                        put("exception", e.message)
-                        put("expectedType", "ImageView")
-                        put("actualType", e.message?.substringAfter("to ") ?: "unknown")
-                    })
-                    put("sessionId", "debug-session")
-                    put("runId", "run1")
-                    put("hypothesisId", "H1")
-                }
-                FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-            } catch (e2: Exception) {}
-            // #endregion
-            throw e
-        }
-        
-        // #region agent log
-        try {
-            val logFile = File("h:\\qksms\\.cursor\\debug.log")
-            val applyView = view.findViewById<View>(R.id.apply)
-            val logEntry = org.json.JSONObject().apply {
-                put("timestamp", System.currentTimeMillis())
-                put("location", "ThemePickerController.kt:195")
-                put("message", "apply view before assignment")
-                put("data", org.json.JSONObject().apply {
-                    put("applyFound", applyView != null)
-                    put("applyType", applyView?.javaClass?.simpleName ?: "null")
-                    put("applyTypeFull", applyView?.javaClass?.name ?: "null")
-                    put("applyId", applyView?.id ?: -1)
-                    put("applyExpectedType", "QkTextView")
-                    put("applyIsButton", applyView is android.widget.Button)
-                    put("applyIsImageView", applyView is android.widget.ImageView)
-                    put("applyIsAppCompatImageView", applyView?.javaClass?.name?.contains("AppCompatImageView") ?: false)
-                    put("applyIsQkTextView", applyView is QkTextView)
-                })
-                put("sessionId", "debug-session")
-                put("runId", "run1")
-                put("hypothesisId", "H1")
-            }
-            FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-        } catch (e: Exception) {}
-        // #endregion
-        
-        try {
-            apply = view.findViewById(R.id.apply)
-        } catch (e: ClassCastException) {
-            // #region agent log
-            try {
-                val logFile = File("h:\\qksms\\.cursor\\debug.log")
-                val logEntry = org.json.JSONObject().apply {
-                    put("timestamp", System.currentTimeMillis())
-                    put("location", "ThemePickerController.kt:220")
-                    put("message", "ClassCastException on apply assignment")
-                    put("data", org.json.JSONObject().apply {
-                        put("exception", e.message)
-                        put("expectedType", "QkTextView")
-                        put("actualType", e.message?.substringAfter("to ") ?: "unknown")
-                    })
-                    put("sessionId", "debug-session")
-                    put("runId", "run1")
-                    put("hypothesisId", "H1")
-                }
-                FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-            } catch (e2: Exception) {}
-            // #endregion
-            throw e
-        }
-        
-        // #region agent log
-        try {
-            val logFile = File("h:\\qksms\\.cursor\\debug.log")
-            val hexView = view.findViewById<View>(R.id.hex)
-            val logEntry = org.json.JSONObject().apply {
-                put("timestamp", System.currentTimeMillis())
-                put("location", "ThemePickerController.kt:162")
-                put("message", "hex view before assignment")
-                put("data", org.json.JSONObject().apply {
-                    put("hexFound", hexView != null)
-                    put("hexType", hexView?.javaClass?.simpleName ?: "null")
-                    put("hexId", hexView?.id ?: -1)
-                })
-                put("sessionId", "debug-session")
-                put("runId", "run1")
-                put("hypothesisId", "H3")
-            }
-            FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-        } catch (e: Exception) {}
-        // #endregion
-        
+        clear = view.findViewById(R.id.clear)
+        apply = view.findViewById(R.id.apply)
         hex = view.findViewById(R.id.hex)
+        
         // applyGroup is in the included hsvPicker layout, find it from there to avoid ClassCastException
         val hsvPickerView = view.findViewById<View>(R.id.hsvPicker)
         val foundApplyGroup = hsvPickerView?.findViewById<Group>(R.id.applyGroup) ?: view.findViewById<Group>(R.id.applyGroup)
@@ -278,48 +98,13 @@ class ThemePickerController(
         }
         applyGroup = foundApplyGroup
         contentView = view.findViewById(R.id.contentView)
-        
-        // #region agent log
-        try {
-            val logFile = File("h:\\qksms\\.cursor\\debug.log")
-            val allViewsWithApplyId = mutableListOf<org.json.JSONObject>()
-            fun findViewsWithId(root: View, targetId: Int) {
-                if (root.id == targetId) {
-                    allViewsWithApplyId.add(org.json.JSONObject().apply {
-                        put("viewType", root.javaClass.simpleName)
-                        put("viewId", root.id)
-                        put("viewParent", root.parent?.javaClass?.simpleName ?: "null")
-                    })
-                }
-                if (root is ViewGroup) {
-                    for (i in 0 until root.childCount) {
-                        findViewsWithId(root.getChildAt(i), targetId)
-                    }
-                }
-            }
-            findViewsWithId(view, R.id.apply)
-            val logEntry = org.json.JSONObject().apply {
-                put("timestamp", System.currentTimeMillis())
-                put("location", "ThemePickerController.kt:188")
-                put("message", "all views with apply ID")
-                put("data", org.json.JSONObject().apply {
-                    put("count", allViewsWithApplyId.size)
-                    put("views", org.json.JSONArray(allViewsWithApplyId))
-                })
-                put("sessionId", "debug-session")
-                put("runId", "run1")
-                put("hypothesisId", "H5")
-            }
-            FileWriter(logFile, true).use { it.append(logEntry.toString() + "\n") }
-        } catch (e: Exception) {}
-        // #endregion
-
+ 
         pager.offscreenPageLimit = 1
         pager.adapter = themePagerAdapter
         tabs.pager = pager
-
+ 
         themeAdapter.data = colors.materialColors
-
+ 
         activity?.let {
             materialColors.layoutManager = LinearLayoutManager(it)
             materialColors.adapter = themeAdapter
