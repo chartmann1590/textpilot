@@ -9,6 +9,11 @@ permissions:
   issues: write
   contents: read
 
+env:
+  FIREBASE_PROJECT_NUMBER: '984340167402'
+  FIREBASE_APP_ID: '1:984340167402:android:53b53d7e26a0fb710e7593'
+  FIREBASE_PROJECT_ID: 'qksms-a602d'
+
 jobs:
   check-fixes:
     runs-on: ubuntu-latest
@@ -18,13 +23,47 @@ jobs:
         with:
           fetch-depth: 0 # Fetch full history so git log has access to 90 days of commits
 
-      - name: Detect fixes and notify issues
+      - name: Exchange Firebase refresh token for access token
+        id: auth
+        continue-on-error: true
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          FIREBASE_OAUTH_CLIENT_ID: ${{ secrets.FIREBASE_OAUTH_CLIENT_ID }}
+          FIREBASE_OAUTH_CLIENT_SECRET: ${{ secrets.FIREBASE_OAUTH_CLIENT_SECRET }}
+        run: |
+          if [ -n "$FIREBASE_TOKEN" ] && [ -n "$FIREBASE_OAUTH_CLIENT_ID" ] && [ -n "$FIREBASE_OAUTH_CLIENT_SECRET" ]; then
+            RESPONSE=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
+              --data-urlencode "client_id=${FIREBASE_OAUTH_CLIENT_ID}" \
+              --data-urlencode "client_secret=${FIREBASE_OAUTH_CLIENT_SECRET}" \
+              --data-urlencode "refresh_token=${FIREBASE_TOKEN}" \
+              --data-urlencode "grant_type=refresh_token")
+            ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
+            if [ "$ACCESS_TOKEN" != "null" ] && [ -n "$ACCESS_TOKEN" ]; then
+              echo "::add-mask::${ACCESS_TOKEN}"
+              echo "access_token=$ACCESS_TOKEN" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo "Token exchange skipped or failed"
+
+      - name: Detect fixes and notify/auto-close issues
         uses: actions/github-script@v7
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN || steps.auth.outputs.access_token }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { execSync } = require('child_process');
             const { owner, repo } = context.repo;
+            const currentDateStr = new Date().toISOString().slice(0, 10);
+
+            // helper for date diff calculation
+            function getDaysBetween(date1Str, date2Str) {
+              const d1 = new Date(date1Str + 'T00:00:00Z');
+              const d2 = new Date(date2Str + 'T00:00:00Z');
+              const diffTime = Math.abs(d2 - d1);
+              return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            }
 
             // 1. Get git log from last 90 days with name-only and pretty format
             let logOutput;
@@ -61,11 +100,6 @@ jobs:
             const filteredCommits = commits.filter(c => fixKeywordRegex.test(c.subject));
             console.log(`Found ${filteredCommits.length} fix commits out of ${commits.length} total commits.`);
 
-            if (filteredCommits.length === 0) {
-              console.log('No fix commits found in the last 90 days. Exiting.');
-              return;
-            }
-
             // 3. Load all open issues with the 'crashlytics' label
             let openIssues;
             try {
@@ -97,10 +131,160 @@ jobs:
               return;
             }
 
-            for (const issue of openIssues) {
-              console.log(`\nProcessing issue #${issue.number}: "${issue.title}"`);
+            // 5. Fetch active issues list from Crashlytics if ACCESS_TOKEN is present
+            const projectId = process.env.FIREBASE_PROJECT_ID;
+            const projectNum = process.env.FIREBASE_PROJECT_NUMBER;
+            const appId = process.env.FIREBASE_APP_ID;
+            const accessToken = process.env.ACCESS_TOKEN;
 
-              // a. Check comments for existing posted review/deploy comments or hidden HTML marker
+            let crashlyticsIssues = [];
+            if (accessToken) {
+              try {
+                console.log('Fetching live sync data from Crashlytics API...');
+                const response = await fetch(`https://firebasecrashlytics.googleapis.com/v1alpha/projects/${projectNum}/apps/${appId}/reports/topIssues?pageSize=25`, {
+                  headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                  }
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  const rawGroups = data.groups || data.issues || [];
+                  crashlyticsIssues = rawGroups.map(entry => {
+                    const inner = entry.issue || entry;
+                    const m = entry.metrics?.[0] || {};
+                    return {
+                      id: inner.id || inner.issueId,
+                      state: (inner.state || 'OPEN').toUpperCase(),
+                      eventCount: parseInt(String(m.eventsCount || inner.eventCount || '0'), 10),
+                    };
+                  }).filter(i => i.id);
+                  console.log(`Successfully fetched ${crashlyticsIssues.length} issues from Crashlytics API.`);
+                } else {
+                  console.error(`Crashlytics API returned status ${response.status}: ${await response.text()}`);
+                }
+              } catch (err) {
+                console.error('Failed to fetch from Crashlytics API:', err);
+              }
+            } else {
+              console.log('ACCESS_TOKEN not available, skipping Crashlytics live sync.');
+            }
+
+            // 6. Process each open issue
+            for (const issue of openIssues) {
+              // Parse Crashlytics ID from labels
+              const cidLabel = issue.labels.find(l => typeof l === 'string' ? l.startsWith('crashlytics:') && l !== 'crashlytics' : l.name?.startsWith('crashlytics:') && l.name !== 'crashlytics');
+              const cid = cidLabel ? (typeof cidLabel === 'string' ? cidLabel : cidLabel.name).slice('crashlytics:'.length) : null;
+              
+              console.log(`\nProcessing issue #${issue.number}: "${issue.title}" (Crashlytics ID: ${cid || 'None'})`);
+
+              // a. Stale & Inactivity Auto-closure check
+              let lastEventDateStr = null;
+              const dateMatch = (issue.body || '').match(/<!-- last_event_date:\s*([0-9-]{10})\s*-->/);
+              if (dateMatch) {
+                lastEventDateStr = dateMatch[1];
+              }
+              const isInitialMarkerMissing = !lastEventDateStr;
+
+              if (!lastEventDateStr) {
+                lastEventDateStr = issue.created_at.slice(0, 10);
+                console.log(`  -> last_event_date marker missing. Initialized to created_at date: ${lastEventDateStr}`);
+              }
+
+              let newEventsDetected = false;
+              let updatedEventCount = null;
+
+              if (cid && crashlyticsIssues.length > 0) {
+                const liveIssue = crashlyticsIssues.find(i => i.id === cid);
+                if (liveIssue) {
+                  const prevMatch = (issue.body || '').match(/<!-- crashlytics-events:(\d+) -->/);
+                  const prev = prevMatch ? parseInt(prevMatch[1], 10) : 0;
+                  if (liveIssue.eventCount > prev) {
+                    newEventsDetected = true;
+                    updatedEventCount = liveIssue.eventCount;
+                    console.log(`  -> New events detected for ${cid}: ${prev} -> ${liveIssue.eventCount}. Updating last_event_date to today.`);
+                    lastEventDateStr = currentDateStr;
+                  }
+                }
+              }
+
+              const daysSinceLastEvent = getDaysBetween(lastEventDateStr, currentDateStr);
+              console.log(`  -> Days since last event: ${daysSinceLastEvent} (last event: ${lastEventDateStr}, current: ${currentDateStr})`);
+
+              if (daysSinceLastEvent >= 5) {
+                console.log(`  -> Issue #${issue.number} has been inactive for ${daysSinceLastEvent} days. Closing issue.`);
+                
+                // Post descriptive comment
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  body: `🤖 **Auto-closing stale issue:** No new crash events have been detected for ${daysSinceLastEvent} consecutive days (last active: ${lastEventDateStr}). Marking this crash as closed both on GitHub and upstream in Firebase Crashlytics.`
+                });
+
+                // Close on GitHub
+                await github.rest.issues.update({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  state: 'closed'
+                });
+
+                // Call Crashlytics PATCH API
+                if (accessToken && cid) {
+                  try {
+                    const patchUrl = `https://firebasecrashlytics.googleapis.com/v1alpha/projects/${projectNum}/apps/${appId}/issues/${cid}?updateMask=state`;
+                    const patchRes = await fetch(patchUrl, {
+                      method: 'PATCH',
+                      headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ state: 'CLOSED' })
+                    });
+                    if (patchRes.ok) {
+                      console.log(`  -> Successfully set state to CLOSED in Crashlytics console for issue ${cid}.`);
+                    } else {
+                      console.error(`  -> Failed to update Crashlytics console: ${patchRes.status} ${await patchRes.text()}`);
+                    }
+                  } catch (err) {
+                    console.error(`  -> Error calling Crashlytics PATCH API:`, err);
+                  }
+                }
+                continue; // Skip commit matching since issue is closed
+              }
+
+              // Embed/update date marker and events count in issue body if changed or missing
+              if (isInitialMarkerMissing || newEventsDetected) {
+                let newBody = issue.body || '';
+                
+                if (updatedEventCount !== null) {
+                  if (newBody.includes('<!-- crashlytics-events:')) {
+                    newBody = newBody.replace(/<!-- crashlytics-events:\d+ -->/, `<!-- crashlytics-events:${updatedEventCount} -->`);
+                  } else {
+                    newBody += `\n<!-- crashlytics-events:${updatedEventCount} -->`;
+                  }
+                }
+
+                if (newBody.includes('<!-- last_event_date:')) {
+                  newBody = newBody.replace(/<!-- last_event_date:\s*[0-9-]{10}\s*-->/, `<!-- last_event_date: ${lastEventDateStr} -->`);
+                } else {
+                  newBody += `\n<!-- last_event_date: ${lastEventDateStr} -->`;
+                }
+
+                try {
+                  await github.rest.issues.update({
+                    owner,
+                    repo,
+                    issue_number: issue.number,
+                    body: newBody
+                  });
+                  console.log(`  -> Updated last_event_date marker to ${lastEventDateStr} in issue body.`);
+                } catch (err) {
+                  console.error(`  -> Failed to update issue body:`, err);
+                }
+              }
+
+              // b. Check comments for existing posted review/deploy comments or hidden HTML marker
               let comments;
               try {
                 const response = await github.rest.issues.listComments({
@@ -114,27 +298,27 @@ jobs:
                 continue;
               }
 
-              const alreadyPosted = comments.some(c => 
-                (c.body || '').includes('pending [store/deploy] review') || 
-                (c.body || '').includes('<!-- fix-comment-posted -->')
-              );
+              const alreadyPosted = comments.some(c => {
+                const body = c.body || '';
+                return body.includes('<!-- fix-comment-posted -->') ||
+                       /pending (store|deploy|\[store\/deploy\]) review/i.test(body);
+              });
               if (alreadyPosted) {
-                console.log(`  -> Skipping issue #${issue.number} (fix comment already posted or pending review).`);
+                console.log(`  -> Skipping commit matching (fix comment already posted or pending review).`);
                 continue;
               }
 
-              // b. Parse blame frame from the issue body
+              // c. Parse blame frame from the issue body
               const blameFrameMatch = (issue.body || '').match(/\|\s*\*\*Blame\s+frame\*\*\s*\|\s*`([^`]+)`/i) || 
-                                       (issue.body || '').match(/Blame\s+frame:?\s*`?([^`\r\n]+)`?/i);
+                                       (issue.body || '').match(/Blame\s+frame:?\s*`?([^`\r\n\s]+)`?/i);
               if (!blameFrameMatch) {
-                console.log(`  -> No blame frame found in issue body, skipping.`);
+                console.log(`  -> No blame frame found in issue body, skipping commit matching.`);
                 continue;
               }
               const blameFrame = blameFrameMatch[1].trim();
               console.log(`  -> Found blame frame: ${blameFrame}`);
 
-              // c. Derive class path segment from blame frame FQCN
-              // Standard JVM FQCN parsing
+              // d. Derive class path segment from blame frame FQCN
               const parts = blameFrame.split('.');
               let classIndex = parts.findIndex(p => /^[A-Z]/.test(p));
               if (classIndex === -1) {
@@ -169,7 +353,7 @@ jobs:
                 continue;
               }
 
-              // d. Find commits that touched these files
+              // e. Find commits that touched these files
               const matchingCommits = filteredCommits.filter(c => 
                 c.files.some(f => uniqueMatchingFiles.includes(f))
               );
@@ -181,17 +365,15 @@ jobs:
 
               console.log(`  -> Found ${matchingCommits.length} matching fix commits!`);
 
-              // e. Post a comment
-              // Extract Exception from issue body
-              const exceptionMatch = (issue.body || '').match(/\|\s*\*\*Exception\*\*\s*\|\s*([^|]+)\s*\|/i);
+              // f. Post a comment
+              const exceptionMatch = (issue.body || '').match(/\|\s*\*\*Exception\*\*\s*\|\s*([^|\r\n]+)\s*\|/i) ||
+                                     (issue.body || '').match(/Exception:?\s*([^\r\n]+)/i);
               const exceptionVal = exceptionMatch ? exceptionMatch[1].trim() : 'N/A';
 
-              // Build commits markdown list
               const commitsList = matchingCommits.map(c => 
                 `- [\`${c.hash}\`](https://github.com/${owner}/${repo}/commit/${c.hash}) - **${c.subject}** (${c.date})`
               ).join('\n');
 
-              // Build unique list of all files changed by these commits
               const allFilesTouched = new Set();
               for (const c of matchingCommits) {
                 for (const f of c.files) {
