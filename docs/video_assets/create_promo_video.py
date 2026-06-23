@@ -83,8 +83,8 @@ RAW_SCENES = [
     dict(
         name="ai_reply",
         image=_img(
-            "qksms_ai_settings.png",
-            "qksms_enabled.png",
+            "screenshots/qksms_ai_settings.png",
+            "screenshots/qksms_enabled.png",
             "public/assets/screenshots/11_conversation_view.png",
         ),
         duration=10,
@@ -97,8 +97,8 @@ RAW_SCENES = [
     dict(
         name="on_device",
         image=_img(
-            "qksms_ondevice.png",
-            "qksms_model_picker.png",
+            "screenshots/qksms_ondevice.png",
+            "screenshots/qksms_model_picker.png",
             "public/assets/screenshots/08_settings_main.png",
         ),
         duration=9,

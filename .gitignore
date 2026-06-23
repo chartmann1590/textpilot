@@ -98,6 +98,15 @@ AGENTS.md
 *claude*
 *agent*
 
+# Screenshots
+/screenshots/
+
+# UI Dumps
+/ui_dumps/
+
+# Github Issue Tracker Prompt
+/Github Issue Tracker Prompt.txt
+
 # Environment files (keep .env.example files)
 .env
 **/.env
