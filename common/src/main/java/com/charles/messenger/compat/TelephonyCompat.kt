@@ -43,7 +43,12 @@ object TelephonyCompat {
 
     fun getOrCreateThreadId(context: Context, recipients: Collection<String>): Long {
         return if (Build.VERSION.SDK_INT >= 23) {
-            Telephony.Threads.getOrCreateThreadId(context, recipients.toSet())
+            try {
+                Telephony.Threads.getOrCreateThreadId(context, recipients.toSet())
+            } catch (e: SecurityException) {
+                Timber.w("READ_SMS permission denied; cannot resolve thread ID")
+                0L
+            }
         } else {
             val uriBuilder = THREAD_ID_CONTENT_URI.buildUpon()
 

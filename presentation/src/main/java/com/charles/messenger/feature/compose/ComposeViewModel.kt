@@ -161,6 +161,11 @@ class ComposeViewModel @Inject constructor(
                     }
                 }
                 .filter { conversation -> conversation.isValid }
+                .map { conversation ->
+                    // Detach from Realm so downstream property access can't throw
+                    // IllegalStateException if the managed object is deleted concurrently.
+                    io.realm.Realm.getDefaultInstance().use { realm -> realm.copyFromRealm(conversation) }
+                }
                 .subscribe(conversation::onNext)
 
         if (addresses.isNotEmpty()) {
