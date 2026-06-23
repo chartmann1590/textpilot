@@ -1,0 +1,241 @@
+name: Crash Fix Checker
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight UTC
+  workflow_dispatch:      # Enable manual triggering
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  check-fixes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full history so git log has access to 90 days of commits
+
+      - name: Detect fixes and notify issues
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { execSync } = require('child_process');
+            const { owner, repo } = context.repo;
+
+            // 1. Get git log from last 90 days with name-only and pretty format
+            let logOutput;
+            try {
+              logOutput = execSync('git log --since="90 days ago" --name-only --pretty=format:"COMMIT:%h|%ad|%s"', { encoding: 'utf8' });
+            } catch (err) {
+              console.error('Failed to run git log:', err);
+              return;
+            }
+
+            const commits = [];
+            let currentCommit = null;
+
+            const lines = logOutput.split('\n');
+            for (let line of lines) {
+              line = line.trim();
+              if (!line) continue;
+              if (line.startsWith('COMMIT:')) {
+                const parts = line.slice(7).split('|');
+                const hash = parts[0];
+                const date = parts[1];
+                const subject = parts.slice(2).join('|');
+                currentCommit = { hash, date, subject, files: [] };
+                commits.push(currentCommit);
+              } else if (currentCommit) {
+                currentCommit.files.push(line);
+              }
+            }
+
+            console.log(`Parsed ${commits.length} commits from the last 90 days.`);
+
+            // 2. Filter commits matching fix keywords
+            const fixKeywordRegex = /\b(fix|fixes|fixed|resolve|resolves|resolved|crash|crashes|crashed|exception|npe|nullpointer|runtimeexception|error)\b/i;
+            const filteredCommits = commits.filter(c => fixKeywordRegex.test(c.subject));
+            console.log(`Found ${filteredCommits.length} fix commits out of ${commits.length} total commits.`);
+
+            if (filteredCommits.length === 0) {
+              console.log('No fix commits found in the last 90 days. Exiting.');
+              return;
+            }
+
+            // 3. Load all open issues with the 'crashlytics' label
+            let openIssues;
+            try {
+              const response = await github.rest.issues.listForRepo({
+                owner,
+                repo,
+                labels: 'crashlytics',
+                state: 'open',
+                per_page: 100
+              });
+              openIssues = response.data;
+            } catch (err) {
+              console.error('Failed to load open issues:', err);
+              return;
+            }
+
+            console.log(`Loaded ${openIssues.length} open crashlytics issues.`);
+
+            // 4. Get all Kotlin and Java files in the repo using actions/github-script's pre-imported glob
+            let relativeFiles = [];
+            try {
+              const globber = await glob.create('**/*.{kt,java}');
+              const files = await globber.glob();
+              const workspace = process.env.GITHUB_WORKSPACE || '';
+              relativeFiles = files.map(f => f.slice(workspace.length + 1).replace(/\\/g, '/'));
+              console.log(`Indexed ${relativeFiles.length} Kotlin/Java source files in repository.`);
+            } catch (err) {
+              console.error('Failed to glob source files:', err);
+              return;
+            }
+
+            for (const issue of openIssues) {
+              console.log(`\nProcessing issue #${issue.number}: "${issue.title}"`);
+
+              // a. Check comments for existing posted review/deploy comments or hidden HTML marker
+              let comments;
+              try {
+                const response = await github.rest.issues.listComments({
+                  owner,
+                  repo,
+                  issue_number: issue.number
+                });
+                comments = response.data;
+              } catch (err) {
+                console.error(`  -> Failed to list comments for issue #${issue.number}:`, err);
+                continue;
+              }
+
+              const alreadyPosted = comments.some(c => 
+                (c.body || '').includes('pending [store/deploy] review') || 
+                (c.body || '').includes('<!-- fix-comment-posted -->')
+              );
+              if (alreadyPosted) {
+                console.log(`  -> Skipping issue #${issue.number} (fix comment already posted or pending review).`);
+                continue;
+              }
+
+              // b. Parse blame frame from the issue body
+              const blameFrameMatch = (issue.body || '').match(/\|\s*\*\*Blame\s+frame\*\*\s*\|\s*`([^`]+)`/i) || 
+                                       (issue.body || '').match(/Blame\s+frame:?\s*`?([^`\r\n]+)`?/i);
+              if (!blameFrameMatch) {
+                console.log(`  -> No blame frame found in issue body, skipping.`);
+                continue;
+              }
+              const blameFrame = blameFrameMatch[1].trim();
+              console.log(`  -> Found blame frame: ${blameFrame}`);
+
+              // c. Derive class path segment from blame frame FQCN
+              // Standard JVM FQCN parsing
+              const parts = blameFrame.split('.');
+              let classIndex = parts.findIndex(p => /^[A-Z]/.test(p));
+              if (classIndex === -1) {
+                classIndex = parts.length - 2;
+              }
+              if (classIndex < 0) {
+                classIndex = 0;
+              }
+              const classParts = parts.slice(0, classIndex + 1);
+              const classPathSegment = classParts.join('/');
+              console.log(`  -> Derived class path segment: ${classPathSegment}`);
+
+              // Match files in repository
+              let matchingFiles = relativeFiles.filter(f => 
+                f.endsWith(classPathSegment + '.kt') || f.endsWith(classPathSegment + '.java')
+              );
+
+              // Fallback to class name if exact FQCN package structure is not matched
+              if (matchingFiles.length === 0 && classParts.length > 0) {
+                const className = classParts[classParts.length - 1];
+                const classNameMatch = relativeFiles.filter(f => 
+                  f.endsWith('/' + className + '.kt') || f.endsWith('/' + className + '.java')
+                );
+                matchingFiles.push(...classNameMatch);
+              }
+
+              const uniqueMatchingFiles = [...new Set(matchingFiles)];
+              console.log(`  -> Matched local files: ${JSON.stringify(uniqueMatchingFiles)}`);
+
+              if (uniqueMatchingFiles.length === 0) {
+                console.log(`  -> No matching local source files found, skipping.`);
+                continue;
+              }
+
+              // d. Find commits that touched these files
+              const matchingCommits = filteredCommits.filter(c => 
+                c.files.some(f => uniqueMatchingFiles.includes(f))
+              );
+
+              if (matchingCommits.length === 0) {
+                console.log(`  -> No matching fix commits found.`);
+                continue;
+              }
+
+              console.log(`  -> Found ${matchingCommits.length} matching fix commits!`);
+
+              // e. Post a comment
+              // Extract Exception from issue body
+              const exceptionMatch = (issue.body || '').match(/\|\s*\*\*Exception\*\*\s*\|\s*([^|]+)\s*\|/i);
+              const exceptionVal = exceptionMatch ? exceptionMatch[1].trim() : 'N/A';
+
+              // Build commits markdown list
+              const commitsList = matchingCommits.map(c => 
+                `- [\`${c.hash}\`](https://github.com/${owner}/${repo}/commit/${c.hash}) - **${c.subject}** (${c.date})`
+              ).join('\n');
+
+              // Build unique list of all files changed by these commits
+              const allFilesTouched = new Set();
+              for (const c of matchingCommits) {
+                for (const f of c.files) {
+                  allFilesTouched.add(f);
+                }
+              }
+              const filesListMarkdown = Array.from(allFilesTouched).map(f => `- \`${f}\``).join('\n');
+
+              const commentBody = [
+                `### 🛠️ Fix Detected for this Crash`,
+                ``,
+                `A fix has been committed that targets the affected file(s).`,
+                ``,
+                `#### 📝 Crash Summary`,
+                `- **Exception**: ${exceptionVal}`,
+                `- **Blame Frame**: \`${blameFrame}\``,
+                ``,
+                `#### 📌 Fix Commits`,
+                commitsList,
+                ``,
+                `#### 📂 Files Modified in Commits`,
+                filesListMarkdown,
+                ``,
+                `#### 📊 Fix Status`,
+                `| Step | Status |`,
+                `| :--- | :---: |`,
+                `| Fix committed | ✅ |`,
+                `| Review/deploy pending | ⏳ |`,
+                `| Live for users | ⏳ |`,
+                ``,
+                `*Note: This issue will be automatically closed once the fix is confirmed live.*`,
+                ``,
+                `<!-- fix-comment-posted -->`
+              ].join('\n');
+
+              try {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  body: commentBody
+                });
+                console.log(`  -> Posted fix comment on issue #${issue.number}`);
+              } catch (err) {
+                console.error(`  -> Failed to post comment on issue #${issue.number}:`, err);
+              }
+            }
