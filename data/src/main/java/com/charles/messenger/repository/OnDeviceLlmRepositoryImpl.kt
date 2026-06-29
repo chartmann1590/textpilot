@@ -19,6 +19,7 @@ import okhttp3.Request
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -128,58 +129,83 @@ class OnDeviceLlmRepositoryImpl @Inject constructor(
                 .get()
                 .build()
 
-            okHttpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    throw IllegalStateException("Download failed: ${response.code} ${response.message}")
-                }
+            val call = okHttpClient.newCall(request)
+            emitter.setCancellable { call.cancel() }
 
-                val body = response.body ?: throw IllegalStateException("Download failed: empty response")
-                val totalBytes = body.contentLength()
+            try {
+                call.execute().use { response ->
+                    if (!response.isSuccessful) {
+                        throw IllegalStateException("Download failed: ${response.code} ${response.message}")
+                    }
 
-                body.byteStream().use { input ->
-                    FileOutputStream(partialFile).use { output ->
-                        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                        var bytesRead: Int
-                        var downloadedBytes = 0L
-                        var lastPercent = -1
+                    val body = response.body ?: throw IllegalStateException("Download failed: empty response")
+                    val totalBytes = body.contentLength()
 
-                        while (input.read(buffer).also { bytesRead = it } >= 0) {
-                            output.write(buffer, 0, bytesRead)
-                            downloadedBytes += bytesRead
+                    body.byteStream().use { input ->
+                        FileOutputStream(partialFile).use { output ->
+                            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                            var downloadedBytes = 0L
+                            var lastPercent = -1
 
-                            if (totalBytes > 0) {
-                                val percent = ((downloadedBytes * 100) / totalBytes).toInt()
-                                if (percent >= lastPercent + 10) {
-                                    lastPercent = percent
-                                    emitter.onNext(
-                                        AiModelInstallUpdate(
-                                            modelId = model.id,
-                                            status = "Downloading ${model.displayName}: $percent%"
+                            while (!emitter.isDisposed) {
+                                val bytesRead = input.read(buffer)
+                                if (bytesRead < 0) {
+                                    break
+                                }
+
+                                output.write(buffer, 0, bytesRead)
+                                downloadedBytes += bytesRead
+
+                                if (totalBytes > 0) {
+                                    val percent = ((downloadedBytes * 100) / totalBytes).toInt()
+                                    if (percent >= lastPercent + 10) {
+                                        lastPercent = percent
+                                        emitter.onNext(
+                                            AiModelInstallUpdate(
+                                                modelId = model.id,
+                                                status = "Downloading ${model.displayName}: $percent%"
+                                            )
                                         )
-                                    )
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            if (targetFile.exists()) {
-                targetFile.delete()
-            }
-            if (!partialFile.renameTo(targetFile)) {
-                throw IllegalStateException("Failed to finalize download for ${model.displayName}")
-            }
+                if (emitter.isDisposed) {
+                    partialFile.delete()
+                    return@create
+                }
 
-            emitter.onNext(
-                AiModelInstallUpdate(
-                    modelId = model.id,
-                    status = "${model.displayName} downloaded",
-                    complete = true,
-                    localPath = targetFile.absolutePath
+                if (targetFile.exists()) {
+                    targetFile.delete()
+                }
+                if (!partialFile.renameTo(targetFile)) {
+                    throw IllegalStateException("Failed to finalize download for ${model.displayName}")
+                }
+
+                emitter.onNext(
+                    AiModelInstallUpdate(
+                        modelId = model.id,
+                        status = "${model.displayName} downloaded",
+                        complete = true,
+                        localPath = targetFile.absolutePath
+                    )
                 )
-            )
-            emitter.onComplete()
+                emitter.onComplete()
+            } catch (error: IOException) {
+                partialFile.delete()
+                if (!emitter.isDisposed) {
+                    Timber.w(error, "On-device model download interrupted for ${model.id}")
+                    emitter.onError(IllegalStateException("Model download interrupted. Please try again.", error))
+                }
+            } catch (error: Throwable) {
+                partialFile.delete()
+                if (!emitter.isDisposed) {
+                    emitter.onError(error)
+                }
+            }
         }
     }
 
