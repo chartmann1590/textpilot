@@ -92,7 +92,7 @@ jobs:
               const typeLabel = ci.errorType === 'ANR' ? 'ANR (App Not Responding)' : ci.errorType === 'NON_FATAL' ? 'Non-Fatal Exception' : 'Fatal Crash';
               const range = ci.metricsStart ? `${ci.metricsStart.slice(0,10)} – ${ci.metricsEnd.slice(0,10)}` : 'Last 7 days';
               const signalLines = ci.signals.map(s => `- ${signalEmoji[s.signal] || s.signal}: ${s.description}`).join('\n');
-              const url = ci.consoleUri || `https://console.firebase.google.com/project/${projectId}/crashlytics/app/android:com.charles.ollama.client.play/issues/${ci.id}`;
+              const url = ci.consoleUri || `https://console.firebase.google.com/project/${projectId}/crashlytics/app/android:com.charles.messenger.v2/issues/${ci.id}`;
               return [
                 `## ${emoji} ${typeLabel}`,
                 ``,
