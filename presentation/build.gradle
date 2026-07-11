@@ -33,10 +33,13 @@ android {
         localProperties.load(new FileInputStream(localPropertiesFile))
     }
 
-    def ciVersionCodeProp = project.findProperty("ciVersionCode")
+    def androidVersionCodeEnv = System.getenv("ANDROID_VERSION_CODE")
     def ciVersionCodeEnv = System.getenv("CI_VERSION_CODE")
-    def resolvedCiVersionCode = (ciVersionCodeProp ?: ciVersionCodeEnv)?.toString()?.trim()
-    def resolvedVersionCode = resolvedCiVersionCode?.isInteger() ? resolvedCiVersionCode.toInteger() : 3000
+    def resolvedVersionCodeStr = (androidVersionCodeEnv ?: ciVersionCodeEnv)?.toString()?.trim()
+    def resolvedVersionCode = resolvedVersionCodeStr?.isInteger() ? resolvedVersionCodeStr.toInteger() : 3000
+
+    def androidVersionNameEnv = System.getenv("ANDROID_VERSION_NAME")
+    def resolvedVersionName = androidVersionNameEnv ?: "3.10.2"
 
     // GitHub feedback integration — read from local.properties or CI environment secrets
     def githubApiToken = ""
@@ -62,7 +65,7 @@ android {
         minSdk 21
         targetSdk 35
         versionCode resolvedVersionCode
-        versionName "3.10.2"
+        versionName resolvedVersionName
         setProperty("archivesBaseName", "messenger-v${versionName}-${resolvedVersionCode}")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true

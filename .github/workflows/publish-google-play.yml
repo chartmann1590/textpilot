@@ -1,0 +1,171 @@
+name: Publish to Google Play
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_play_publish:
+        description: 'Type "publish" to confirm submission to Google Play Production'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes (leave blank to auto-generate from commits)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    name: Build & Publish to Play
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      CI: "true"
+      keystore_password: ${{ secrets.STORE_PASSWORD }}
+      key_alias: ${{ secrets.KEY_ALIAS }}
+      key_password: ${{ secrets.KEY_PASSWORD }}
+      ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+      ADMOB_BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
+      ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
+      ADMOB_REWARDED_ID: ${{ secrets.ADMOB_REWARDED_ID }}
+      ADMOB_NATIVE_ADVANCED_ID: ${{ secrets.ADMOB_NATIVE_ADVANCED_ID }}
+      GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
+      GH_REPO_OWNER: ${{ secrets.GH_REPO_OWNER }}
+      GH_REPO_NAME: ${{ secrets.GH_REPO_NAME }}
+
+    steps:
+      - name: Guard — confirm publish intent
+        if: github.event.inputs.confirm_play_publish != 'publish'
+        run: |
+          echo "::error::Publish not confirmed. Set confirm_play_publish to 'publish' to proceed."
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute version code and name
+        id: version
+        shell: bash
+        run: |
+          ANDROID_VERSION_CODE="$(date -u +'%y%j%H%M')"
+          ANDROID_VERSION_NAME="3.10.2.$(date -u +'%Y%m%d.%H%M')"
+          echo "ANDROID_VERSION_CODE=${ANDROID_VERSION_CODE}" >> "$GITHUB_ENV"
+          echo "ANDROID_VERSION_NAME=${ANDROID_VERSION_NAME}" >> "$GITHUB_ENV"
+          echo "version_code=${ANDROID_VERSION_CODE}" >> "$GITHUB_OUTPUT"
+          echo "version_name=${ANDROID_VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo "Version code: ${ANDROID_VERSION_CODE}"
+          echo "Version name: ${ANDROID_VERSION_NAME}"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Materialize signing keystore
+        shell: bash
+        run: echo "${{ secrets.STORE_FILE_B64 }}" | base64 -d > release.jks
+
+      - name: Materialize google-services.json
+        shell: bash
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON_B64 }}" | base64 -d > presentation/google-services.json
+
+      - name: Write local.properties
+        shell: bash
+        run: |
+          cat > local.properties <<EOF
+          sdk.dir=${ANDROID_SDK_ROOT}
+          STORE_FILE=../release.jks
+          STORE_PASSWORD=${keystore_password}
+          KEY_ALIAS=${key_alias}
+          KEY_PASSWORD=${key_password}
+          ADMOB_APP_ID=${ADMOB_APP_ID}
+          ADMOB_BANNER_ID=${ADMOB_BANNER_ID}
+          ADMOB_INTERSTITIAL_ID=${ADMOB_INTERSTITIAL_ID}
+          ADMOB_REWARDED_ID=${ADMOB_REWARDED_ID}
+          ADMOB_NATIVE_ADVANCED_ID=${ADMOB_NATIVE_ADVANCED_ID}
+          github.api.token=${GH_API_TOKEN}
+          github.repo.owner=${GH_REPO_OWNER}
+          github.repo.name=${GH_REPO_NAME}
+          EOF
+
+      - name: Run unit tests and lint
+        shell: bash
+        run: ./gradlew :presentation:testWithAnalyticsReleaseUnitTest :presentation:lintWithAnalyticsRelease --stacktrace || true
+
+      - name: Build Play release AAB
+        shell: bash
+        run: ./gradlew :presentation:bundleWithAnalyticsRelease --stacktrace
+
+      - name: Find built AAB
+        id: aab
+        shell: bash
+        run: |
+          AAB_PATH=$(find presentation/build/outputs/bundle/withAnalyticsRelease -name "*.aab" | head -1)
+          echo "path=${AAB_PATH}" >> "$GITHUB_OUTPUT"
+          echo "AAB: ${AAB_PATH}"
+
+      - name: Generate release notes
+        shell: bash
+        run: |
+          mkdir -p distribution/whatsnew
+
+          if [ -n "${{ github.event.inputs.release_notes }}" ]; then
+            echo "${{ github.event.inputs.release_notes }}" > distribution/whatsnew/whatsnew-en-US
+          else
+            PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            if [ -n "${PREV_TAG}" ]; then
+              git log "${PREV_TAG}..HEAD" --oneline --no-merges > /tmp/commits.txt 2>/dev/null || true
+            else
+              git log -20 --oneline --no-merges > /tmp/commits.txt 2>/dev/null || true
+            fi
+            if [ -s /tmp/commits.txt ]; then
+              cat /tmp/commits.txt > distribution/whatsnew/whatsnew-en-US
+            else
+              echo "Bug fixes and performance improvements." > distribution/whatsnew/whatsnew-en-US
+            fi
+          fi
+          echo "Release notes:"
+          cat distribution/whatsnew/whatsnew-en-US
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-release-aab-${{ steps.version.outputs.version_code }}
+          path: ${{ steps.aab.outputs.path }}
+          if-no-files-found: error
+
+      - name: Upload mapping file artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-release-mapping-${{ steps.version.outputs.version_code }}
+          path: presentation/build/outputs/mapping/withAnalyticsRelease/mapping.txt
+          if-no-files-found: warn
+
+      - name: Verify service account secret
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}" ]; then
+            echo "::error::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret is missing"
+            exit 1
+          fi
+          echo "::notice::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is present"
+
+      - name: Publish to Google Play
+        uses: r0adkll/upload-google-play@v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.charles.messenger.v2
+          releaseFiles: ${{ steps.aab.outputs.path }}
+          track: production
+          status: completed
+          whatsNewDirectory: distribution/whatsnew
+          mappingFile: presentation/build/outputs/mapping/withAnalyticsRelease/mapping.txt
+          changesNotSentForReview: false
