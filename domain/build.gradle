@@ -23,7 +23,7 @@ apply plugin: 'kotlin-kapt'
 
 android {
     namespace "com.charles.messenger.domain"
-    compileSdk 34
+    compileSdk 36
 
     compileOptions {
         sourceCompatibility 1.8
@@ -36,7 +36,7 @@ android {
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 35
+        targetSdkVersion 36
     }
 }
 

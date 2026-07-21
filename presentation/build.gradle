@@ -24,7 +24,7 @@ apply plugin: 'kotlin-kapt'
 
 android {
     namespace "com.charles.messenger"
-    compileSdk 34
+    compileSdk 36
     flavorDimensions "analytics"
 
     def localProperties = new Properties()
@@ -63,7 +63,7 @@ android {
 
         applicationId "com.charles.messenger.v2"
         minSdk 21
-        targetSdk 35
+        targetSdk 36
         versionCode resolvedVersionCode
         versionName resolvedVersionName
         setProperty("archivesBaseName", "messenger-v${versionName}-${resolvedVersionCode}")

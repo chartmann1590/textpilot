@@ -22,7 +22,7 @@ apply plugin: 'kotlin-kapt'
 
 android {
     namespace "com.charles.messenger.data"
-    compileSdk 34
+    compileSdk 36
     flavorDimensions "analytics"
 
     buildFeatures {
@@ -40,7 +40,7 @@ android {
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 35
+        targetSdkVersion 36
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField "String", "AMPLITUDE_API_KEY", "\"${System.getenv("AMPLITUDE_API_KEY")}\""
