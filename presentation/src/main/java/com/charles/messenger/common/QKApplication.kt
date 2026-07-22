@@ -26,6 +26,8 @@ import androidx.core.provider.FontRequest
 import androidx.emoji.text.EmojiCompat
 import androidx.emoji.text.FontRequestEmojiCompatConfig
 import com.charles.messenger.R
+import com.charles.messenger.common.util.BillingTimeoutException
+import com.charles.messenger.common.util.BillingUnavailableException
 import com.charles.messenger.common.util.CrashlyticsTree
 import com.charles.messenger.common.util.FileLoggingTree
 import com.charles.messenger.injection.AppComponentManager
@@ -97,11 +99,22 @@ class QKApplication : Application(), HasActivityInjector, HasBroadcastReceiverIn
             }
             try {
                 billingManager.checkForPurchases()
+            } catch (e: BillingTimeoutException) {
+                // Expected/recoverable on some devices (slow Play services bind, no
+                // Play Store account signed in, etc.) - already handled gracefully by
+                // continuing without purchase state. Not worth a Crashlytics non-fatal.
+                Timber.i("Billing unavailable while checking for purchases: ${e.message}")
+            } catch (e: BillingUnavailableException) {
+                Timber.i("Billing unavailable while checking for purchases: ${e.message}")
             } catch (e: Exception) {
                 Timber.w(e, "Error checking for purchases")
             }
             try {
                 billingManager.queryProducts()
+            } catch (e: BillingTimeoutException) {
+                Timber.i("Billing unavailable while querying products: ${e.message}")
+            } catch (e: BillingUnavailableException) {
+                Timber.i("Billing unavailable while querying products: ${e.message}")
             } catch (e: Exception) {
                 Timber.w(e, "Error querying products")
             }

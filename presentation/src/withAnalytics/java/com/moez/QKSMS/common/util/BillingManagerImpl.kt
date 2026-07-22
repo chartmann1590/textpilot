@@ -54,16 +54,6 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Exception thrown when Google Play Billing is unavailable on the device
- */
-class BillingUnavailableException(message: String) : Exception(message)
-
-/**
- * Exception thrown when billing service connection times out
- */
-class BillingTimeoutException(message: String) : Exception(message)
-
 @Singleton
 class BillingManagerImpl @Inject constructor(
     context: Context,
@@ -387,64 +377,76 @@ class BillingManagerImpl @Inject constructor(
             billingClient.startConnection(this)
         }
 
-        // #region agent log
-        com.charles.messenger.util.DebugLogger.log(
-            location = "BillingManagerImpl.kt:232",
-            message = "Waiting for billing client to be ready (with 10s timeout)",
-            hypothesisId = "H2"
-        )
-        // #endregion
-        try {
-            val readyState = withTimeout(10000) {
-                billingClientState.first { state -> state == BillingClient.BillingResponseCode.OK }
-            }
+        // Retry once on a cold-start timeout: some devices bind the Play Store's billing
+        // service slowly on first launch. A single retry with a fresh connection attempt
+        // clears most of these without giving up after only 10s.
+        val maxAttempts = 2
+        for (attempt in 1..maxAttempts) {
             // #region agent log
             com.charles.messenger.util.DebugLogger.log(
                 location = "BillingManagerImpl.kt:232",
-                message = "Billing client ready",
-                data = mapOf("state" to readyState.toString()),
+                message = "Waiting for billing client to be ready (with 10s timeout)",
+                data = mapOf("attempt" to attempt.toString()),
                 hypothesisId = "H2"
             )
             // #endregion
-            runnable()
-        } catch (e: TimeoutCancellationException) {
-            // #region agent log
-            com.charles.messenger.util.DebugLogger.log(
-                location = "BillingManagerImpl.kt:232",
-                message = "Timeout waiting for billing client",
-                hypothesisId = "H2"
-            )
-            // #endregion
-            Timber.e("Timeout waiting for billing client to connect")
-            // Check if billing is unavailable (response code 3) by checking the current state
-            // Since billingClientState is a SharedFlow with replay=1, we can get the current value
             try {
-                val finalState = withContext(Dispatchers.IO) {
-                    kotlinx.coroutines.withTimeout(50) {
-                        billingClientState.first()
+                val readyState = withTimeout(10000) {
+                    billingClientState.first { state -> state == BillingClient.BillingResponseCode.OK }
+                }
+                // #region agent log
+                com.charles.messenger.util.DebugLogger.log(
+                    location = "BillingManagerImpl.kt:232",
+                    message = "Billing client ready",
+                    data = mapOf("state" to readyState.toString(), "attempt" to attempt.toString()),
+                    hypothesisId = "H2"
+                )
+                // #endregion
+                runnable()
+                return
+            } catch (e: TimeoutCancellationException) {
+                // #region agent log
+                com.charles.messenger.util.DebugLogger.log(
+                    location = "BillingManagerImpl.kt:232",
+                    message = "Timeout waiting for billing client",
+                    data = mapOf("attempt" to attempt.toString()),
+                    hypothesisId = "H2"
+                )
+                // #endregion
+                Timber.i("Timeout waiting for billing client to connect (attempt $attempt/$maxAttempts)")
+                // Check if billing is unavailable (response code 3) by checking the current state
+                // Since billingClientState is a SharedFlow with replay=1, we can get the current value
+                val finalState = try {
+                    withContext(Dispatchers.IO) {
+                        kotlinx.coroutines.withTimeout(50) {
+                            billingClientState.first()
+                        }
                     }
+                } catch (e2: kotlinx.coroutines.TimeoutCancellationException) {
+                    null
+                } catch (e2: Exception) {
+                    Timber.w(e2, "Error checking final billing state")
+                    null
                 }
                 // #region agent log
                 com.charles.messenger.util.DebugLogger.log(
                     location = "BillingManagerImpl.kt:400",
                     message = "Final billing state after timeout",
-                    data = mapOf("finalState" to finalState.toString()),
+                    data = mapOf("finalState" to finalState.toString(), "attempt" to attempt.toString()),
                     hypothesisId = "H2"
                 )
                 // #endregion
                 if (finalState == BillingClient.BillingResponseCode.BILLING_UNAVAILABLE) {
                     throw BillingUnavailableException("Billing service unavailable on device")
                 }
-            } catch (e2: kotlinx.coroutines.TimeoutCancellationException) {
-                // Couldn't get state quickly, assume general timeout
-            } catch (e2: BillingUnavailableException) {
-                // Re-throw billing unavailable exception
-                throw e2
-            } catch (e2: Exception) {
-                // Other exception, assume timeout
-                Timber.w(e2, "Error checking final billing state")
+                if (attempt < maxAttempts) {
+                    // Retry with a fresh connection attempt before giving up.
+                    Timber.i("Retrying billing service connection")
+                    billingClient.startConnection(this)
+                    continue
+                }
+                throw BillingTimeoutException("Billing service connection timeout")
             }
-            throw BillingTimeoutException("Billing service connection timeout")
         }
     }
 
