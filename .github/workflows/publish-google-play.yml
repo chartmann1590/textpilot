@@ -71,7 +71,11 @@ jobs:
 
       - name: Materialize signing keystore
         shell: bash
-        run: echo "${{ secrets.STORE_FILE_B64 }}" | base64 -d > release.jks
+        # presentation/build.gradle's CI branch (CI=true, set above) hardcodes
+        # storeFile = file("../keystore") - i.e. a repo-root file literally named
+        # "keystore", not "release.jks". Must match that exact filename or every
+        # release build fails at :presentation:validateSigningWithAnalyticsRelease.
+        run: echo "${{ secrets.STORE_FILE_B64 }}" | base64 -d > keystore
 
       - name: Materialize google-services.json
         shell: bash
@@ -82,7 +86,7 @@ jobs:
         run: |
           cat > local.properties <<EOF
           sdk.dir=${ANDROID_SDK_ROOT}
-          STORE_FILE=../release.jks
+          STORE_FILE=../keystore
           STORE_PASSWORD=${keystore_password}
           KEY_ALIAS=${key_alias}
           KEY_PASSWORD=${key_password}
