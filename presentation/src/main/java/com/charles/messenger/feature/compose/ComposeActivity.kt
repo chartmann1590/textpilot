@@ -286,6 +286,13 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
                 .autoDisposable(scope())
                 .subscribe()
 
+        // Independent of the ViewModel's send reducer — just counts real sends toward the
+        // official Play In-App Review prompt.
+        send.clicks()
+                .doOnNext { ReviewPrompter.onMessageSent(this) }
+                .autoDisposable(scope())
+                .subscribe()
+
         window.callback = ComposeWindowCallback(window.callback, this)
 
         // Handle keyboard visibility to ensure proper resizing and scrolling
