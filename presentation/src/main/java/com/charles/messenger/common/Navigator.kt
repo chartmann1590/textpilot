@@ -211,6 +211,23 @@ class Navigator @Inject constructor(
     }
 
     /**
+     * Launch the Play Store and display the listing for another app in the developer's portfolio
+     */
+    fun installOtherApp(packageId: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageId"))
+                .addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY
+                        or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+                        or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+
+        try {
+            startActivityExternal(intent)
+        } catch (e: ActivityNotFoundException) {
+            val url = "https://play.google.com/store/apps/details?id=$packageId"
+            startActivityExternal(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }
+    }
+
+    /**
      * Launch the Play Store and display the Call Blocker listing
      */
     fun installCallBlocker() {

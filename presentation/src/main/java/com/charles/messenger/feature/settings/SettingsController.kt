@@ -98,6 +98,7 @@ class SettingsController : QkController<SettingsView, SettingsState, SettingsPre
     private lateinit var syncingProgress: ProgressBar
     private lateinit var trial: PreferenceView
     private lateinit var about: PreferenceView
+    private lateinit var moreApps: PreferenceView
 
     private val signatureDialog: TextInputDialog by lazy {
         TextInputDialog(activity!!, context.getString(R.string.settings_signature_title), signatureSubject::onNext)
@@ -151,6 +152,7 @@ class SettingsController : QkController<SettingsView, SettingsState, SettingsPre
         syncingProgress = view.findViewById(R.id.syncingProgress)!!
         trial = view.findViewById(R.id.trial)!!
         about = view.findViewById(R.id.about)!!
+        moreApps = view.findViewById(R.id.moreApps)!!
 
         (0 until preferences.childCount)
                 .mapNotNull { index -> preferences.getChildAt(index) as? PreferenceView }
@@ -372,6 +374,12 @@ class SettingsController : QkController<SettingsView, SettingsState, SettingsPre
 
     override fun showAbout() {
         router.pushController(RouterTransaction.with(AboutController())
+                .pushChangeHandler(QkChangeHandler())
+                .popChangeHandler(QkChangeHandler()))
+    }
+
+    override fun showMoreApps() {
+        router.pushController(RouterTransaction.with(com.charles.messenger.feature.settings.moreapps.MoreAppsController())
                 .pushChangeHandler(QkChangeHandler())
                 .popChangeHandler(QkChangeHandler()))
     }

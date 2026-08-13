@@ -267,6 +267,8 @@ class SettingsPresenter @Inject constructor(
 
                         R.id.about -> view.showAbout()
 
+                        R.id.moreApps -> view.showMoreApps()
+
                         R.id.aiSettings -> {
                             // #region agent log
                             com.charles.messenger.util.DebugLogger.log(
