@@ -17,7 +17,6 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import com.charles.messenger.BuildConfig
 import com.charles.messenger.R
 import com.charles.messenger.common.base.QkController
 import com.charles.messenger.injection.appComponent
@@ -58,14 +57,7 @@ class FeedbackController : QkController<FeedbackView, FeedbackState, FeedbackPre
     private var commentImageUri: Uri? = null
     private var commentDialog: AlertDialog? = null
 
-    private val githubClient by lazy {
-        GithubApiClient(
-            BuildConfig.GITHUB_API_TOKEN,
-            BuildConfig.GITHUB_REPO_OWNER,
-            BuildConfig.GITHUB_REPO_NAME,
-            BuildConfig.FEEDBACK_ASSETS_DIR
-        )
-    }
+    private val githubClient by lazy { GithubApiClient() }
 
     private val bugReportRepo by lazy {
         BugReportRepo(activity!!.applicationContext)

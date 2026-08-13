@@ -15,14 +15,18 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-class GithubApiClient(
-    private val token: String,
-    private val owner: String,
-    private val repo: String,
-    private val assetsDir: String
-) {
+/**
+ * Talks to the cloudflare-worker/ feedback relay, not api.github.com directly — the
+ * Worker holds the GitHub token as a server-side secret and hardcodes this app's own
+ * repo, so no owner/repo/credential ever needs to travel through this app. Previously
+ * embedded BuildConfig.GITHUB_API_TOKEN client-side as a Bearer header, which shipped a
+ * real repo-write PAT in every release build (extractable from the APK). See
+ * cloudflare-worker/src/index.ts.
+ */
+class GithubApiClient {
     private val moshi: Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     private val JSON = "application/json; charset=utf-8".toMediaType()
+    private val baseUrl = "https://textpilot-github-feedback.charles-h-hartmann1.workers.dev"
 
     private val client: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -33,15 +37,12 @@ class GithubApiClient(
                 .addHeader("Accept", "application/vnd.github+json")
                 .addHeader("X-GitHub-Api-Version", "2022-11-28")
                 .addHeader("User-Agent", "TextPilot-Android/1.0")
-            if (token.isNotBlank()) {
-                builder.addHeader("Authorization", "Bearer $token")
-            }
             chain.proceed(builder.build())
         }
         .build()
 
-    val isConfigured: Boolean
-        get() = token.isNotBlank() && owner.isNotBlank() && repo.isNotBlank()
+    // Always true now — the relay is a fixed public Worker URL, not per-install config.
+    val isConfigured: Boolean = true
 
     suspend fun createIssue(title: String, body: String): Result<GithubIssue> = withContext(Dispatchers.IO) {
         runCatching {
@@ -49,7 +50,7 @@ class GithubApiClient(
                 .toJson(CreateIssueRequest(title, body))
                 .toRequestBody(JSON)
             val request = Request.Builder()
-                .url("https://api.github.com/repos/$owner/$repo/issues")
+                .url("$baseUrl/issue")
                 .post(reqBody)
                 .build()
             val response = client.newCall(request).execute()
@@ -63,7 +64,7 @@ class GithubApiClient(
     suspend fun getIssue(number: Int): Result<GithubIssue> = withContext(Dispatchers.IO) {
         runCatching {
             val request = Request.Builder()
-                .url("https://api.github.com/repos/$owner/$repo/issues/$number")
+                .url("$baseUrl/issue/$number")
                 .get()
                 .build()
             val response = client.newCall(request).execute()
@@ -77,7 +78,7 @@ class GithubApiClient(
     suspend fun getComments(number: Int): Result<List<GithubComment>> = withContext(Dispatchers.IO) {
         runCatching {
             val request = Request.Builder()
-                .url("https://api.github.com/repos/$owner/$repo/issues/$number/comments")
+                .url("$baseUrl/issue/$number/comments")
                 .get()
                 .build()
             val response = client.newCall(request).execute()
@@ -94,7 +95,7 @@ class GithubApiClient(
                 .toJson(PostCommentRequest(body))
                 .toRequestBody(JSON)
             val request = Request.Builder()
-                .url("https://api.github.com/repos/$owner/$repo/issues/$number/comments")
+                .url("$baseUrl/issue/$number/comments")
                 .post(reqBody)
                 .build()
             val response = client.newCall(request).execute()
@@ -111,11 +112,11 @@ class GithubApiClient(
             val random = (Math.random() * 99999).toInt()
             val fileName = "feedback-$timestamp-$random.png"
             val reqBody = moshi.adapter(UploadAssetRequest::class.java)
-                .toJson(UploadAssetRequest("Add feedback asset $fileName", base64Content))
+                .toJson(UploadAssetRequest(filename = fileName, contentBase64 = base64Content))
                 .toRequestBody(JSON)
             val request = Request.Builder()
-                .url("https://api.github.com/repos/$owner/$repo/contents/$assetsDir/$fileName")
-                .put(reqBody)
+                .url("$baseUrl/upload-image")
+                .post(reqBody)
                 .build()
             val response = client.newCall(request).execute()
             val responseBody = response.body?.string() ?: ""

@@ -33,9 +33,6 @@ jobs:
       ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
       ADMOB_REWARDED_ID: ${{ secrets.ADMOB_REWARDED_ID }}
       ADMOB_NATIVE_ADVANCED_ID: ${{ secrets.ADMOB_NATIVE_ADVANCED_ID }}
-      GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
-      GH_REPO_OWNER: ${{ secrets.GH_REPO_OWNER }}
-      GH_REPO_NAME: ${{ secrets.GH_REPO_NAME }}
 
     steps:
       - name: Guard — confirm publish intent
@@ -95,9 +92,6 @@ jobs:
           ADMOB_INTERSTITIAL_ID=${ADMOB_INTERSTITIAL_ID}
           ADMOB_REWARDED_ID=${ADMOB_REWARDED_ID}
           ADMOB_NATIVE_ADVANCED_ID=${ADMOB_NATIVE_ADVANCED_ID}
-          github.api.token=${GH_API_TOKEN}
-          github.repo.owner=${GH_REPO_OWNER}
-          github.repo.name=${GH_REPO_NAME}
           EOF
 
       - name: Run unit tests and lint

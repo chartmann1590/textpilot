@@ -41,20 +41,6 @@ android {
     def androidVersionNameEnv = System.getenv("ANDROID_VERSION_NAME")
     def resolvedVersionName = androidVersionNameEnv ?: "3.10.2"
 
-    // GitHub feedback integration — read from local.properties or CI environment secrets
-    def githubApiToken = ""
-    def githubRepoOwner = "chartmann1590"
-    def githubRepoName = "textpilot"
-    if (System.getenv("CI") == "true") {
-        githubApiToken = System.getenv("GH_API_TOKEN") ?: ""
-        githubRepoOwner = System.getenv("GH_REPO_OWNER") ?: "chartmann1590"
-        githubRepoName = System.getenv("GH_REPO_NAME") ?: "textpilot"
-    } else {
-        githubApiToken = localProperties.getProperty("github.api.token", "")
-        githubRepoOwner = localProperties.getProperty("github.repo.owner", "chartmann1590")
-        githubRepoName = localProperties.getProperty("github.repo.name", "textpilot")
-    }
-
     defaultConfig {
 
         configurations.all {
@@ -82,11 +68,6 @@ android {
         buildConfigField "String", "ADMOB_REWARDED_ID", "\"" + admobRewardedId + "\""
         buildConfigField "Boolean", "USE_TEST_ADS", "false"
 
-        // GitHub feedback — values from local.properties or CI secrets (never hardcoded)
-        buildConfigField "String", "GITHUB_API_TOKEN", "\"${githubApiToken}\""
-        buildConfigField "String", "GITHUB_REPO_OWNER", "\"${githubRepoOwner}\""
-        buildConfigField "String", "GITHUB_REPO_NAME", "\"${githubRepoName}\""
-        buildConfigField "String", "FEEDBACK_ASSETS_DIR", "\"feedback-assets\""
         resValue "string", "admob_banner_id", "\"" + admobBannerId + "\""
         resValue "string", "admob_native_advanced_id", "\"" + admobNativeAdvancedId + "\""
         manifestPlaceholders = [ADMOB_APP_ID: admobAppId]

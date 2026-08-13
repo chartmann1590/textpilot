@@ -22,9 +22,6 @@ jobs:
       ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
       ADMOB_REWARDED_ID: ${{ secrets.ADMOB_REWARDED_ID }}
       ADMOB_NATIVE_ADVANCED_ID: ${{ secrets.ADMOB_NATIVE_ADVANCED_ID }}
-      GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
-      GH_REPO_OWNER: ${{ secrets.GH_REPO_OWNER }}
-      GH_REPO_NAME: ${{ secrets.GH_REPO_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,9 +51,6 @@ jobs:
           STORE_PASSWORD=${keystore_password}
           KEY_ALIAS=${key_alias}
           KEY_PASSWORD=${key_password}
-          github.api.token=${GH_API_TOKEN}
-          github.repo.owner=${GH_REPO_OWNER}
-          github.repo.name=${GH_REPO_NAME}
           EOF
 
           echo "${{ secrets.STORE_FILE_B64 }}" | base64 -d > keystore
