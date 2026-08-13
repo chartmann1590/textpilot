@@ -37,6 +37,7 @@ import com.charles.messenger.feature.compose.editing.DetailedChipView
 import com.charles.messenger.feature.conversationinfo.injection.ConversationInfoComponent
 import com.charles.messenger.feature.settings.SettingsController
 import com.charles.messenger.feature.settings.about.AboutController
+import com.charles.messenger.feature.settings.moreapps.MoreAppsController
 import com.charles.messenger.feature.settings.ai.AiSettingsController
 import com.charles.messenger.feature.settings.feedback.FeedbackController
 import com.charles.messenger.feature.settings.ai.tutorial.AiTutorialController
@@ -66,6 +67,7 @@ interface AppComponent {
     fun inject(application: QKApplication)
 
     fun inject(controller: AboutController)
+    fun inject(controller: MoreAppsController)
     fun inject(controller: BackupController)
     fun inject(controller: BlockedMessagesController)
     fun inject(controller: BlockedNumbersController)
