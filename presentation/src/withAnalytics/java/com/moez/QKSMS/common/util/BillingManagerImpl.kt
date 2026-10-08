@@ -31,7 +31,6 @@ import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.PendingPurchasesParams
-import com.android.billingclient.api.QueryPurchaseHistoryParams
 import com.android.billingclient.api.QueryPurchasesParams
 import com.charles.messenger.manager.AnalyticsManager
 import com.charles.messenger.manager.BillingManager
@@ -100,6 +99,7 @@ class BillingManagerImpl @Inject constructor(
             .enablePendingPurchases(
                 PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
             )
+            .enableAutoServiceReconnection()
             .build()
 
     private val billingClientState = MutableSharedFlow<Int>(
@@ -115,12 +115,6 @@ class BillingManagerImpl @Inject constructor(
         // Load the cached data
         queryPurchases()
 
-        // On a fresh device, the purchase might not be cached, and so we'll need to force a refresh
-        val historyParams = QueryPurchaseHistoryParams.newBuilder()
-                .setProductType(BillingClient.ProductType.INAPP)
-                .build()
-        billingClient.queryPurchaseHistoryAsync(historyParams) { _, _ -> }
-        queryPurchases()
     }
 
     override suspend fun queryProducts() = executeServiceRequest {
@@ -142,7 +136,8 @@ class BillingManagerImpl @Inject constructor(
                 .setProductList(productList)
                 .build()
 
-        billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+        billingClient.queryProductDetailsAsync(params) { billingResult, queryResult ->
+            val productDetailsList = queryResult.productDetailsList
             // #region agent log
             com.charles.messenger.util.DebugLogger.log(
                 location = "BillingManagerImpl.kt:132",
@@ -189,7 +184,8 @@ class BillingManagerImpl @Inject constructor(
             hypothesisId = "H3"
         )
         // #endregion
-        billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+        billingClient.queryProductDetailsAsync(params) { billingResult, queryResult ->
+            val productDetailsList = queryResult.productDetailsList
             // #region agent log
             com.charles.messenger.util.DebugLogger.log(
                 location = "BillingManagerImpl.kt:152",
