@@ -1,0 +1,42 @@
+launch
+wait 15
+adclose
+taploop (?i)^(dismiss|ok|got it|not now|later|no thanks|skip)$
+shot 01-launch
+tap (?i)^change$
+wait 4
+shot 02-default-sms-dialog
+tap (?i)^(messenger|textpilot.*)$
+wait 2
+tap (?i)^set as default$
+wait 4
+taploop (?i)^(allow|while using the app|ok|dismiss|got it)$
+adclose
+wait 3
+shot 03-main
+tapxy 45 55
+wait 3
+shot 04-drawer
+swipeup
+shot 05-drawer-bottom
+tap (?i)^settings$
+wait 4
+adclose
+shot 06-settings
+swipeup
+swipeup
+shot 07-settings-mid
+swipeup
+swipeup
+shot 08-settings-bottom
+back
+wait 2
+tapxy 45 55
+wait 2
+tap (?i)^scheduled$
+wait 3
+adclose
+shot 09-scheduled
+back
+wait 2
+shot 10-back

@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - "**"
+      # The Amazon Appstore branch builds with its own amazon.yml (draft only); never publish it here.
+      - "!amazon"
 
 permissions:
   contents: write

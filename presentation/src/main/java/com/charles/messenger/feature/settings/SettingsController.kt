@@ -299,7 +299,7 @@ class SettingsController : QkController<SettingsView, SettingsState, SettingsPre
 
         // Show/hide and update trial preference
         val fdroid = BuildConfig.FLAVOR == "noAnalytics"
-        trial.isVisible = !fdroid && !state.upgraded
+        trial.isVisible = !fdroid && !state.upgraded && !(com.charles.messenger.BuildConfig.STORE == "amazon") // Amazon: no messenger+ trial/upsell
         when (state.trialState) {
             com.charles.messenger.manager.BillingManager.TrialState.ACTIVE -> {
                 trial.summary = context.getString(R.string.settings_trial_summary_active, state.trialDaysRemaining)

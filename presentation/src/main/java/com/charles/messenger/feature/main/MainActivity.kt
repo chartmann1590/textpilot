@@ -283,14 +283,14 @@ class MainActivity : QkThemedActivity(), MainView {
         binding.toolbar.menu.findItem(R.id.read)?.isVisible = markRead && selectedConversations != 0
         binding.toolbar.menu.findItem(R.id.unread)?.isVisible = !markRead && selectedConversations != 0
         binding.toolbar.menu.findItem(R.id.block)?.isVisible = selectedConversations != 0
-        binding.toolbar.menu.findItem(R.id.upgrade)?.isVisible = !state.upgraded && selectedConversations == 0
+        binding.toolbar.menu.findItem(R.id.upgrade)?.isVisible = !state.upgraded && selectedConversations == 0 && !(com.charles.messenger.BuildConfig.STORE == "amazon") // Amazon: no messenger+ upsell
 
         listOf(drawerBinding.plusBadge1, drawerBinding.plusBadge2).forEach { badge ->
-            badge.isVisible = drawerBadgesExperiment.variant && !state.upgraded
+            badge.isVisible = drawerBadgesExperiment.variant && !state.upgraded && !(com.charles.messenger.BuildConfig.STORE == "amazon")
         }
-        drawerBinding.plus.isVisible = !state.upgraded
+        drawerBinding.plus.isVisible = !state.upgraded && !(com.charles.messenger.BuildConfig.STORE == "amazon") // Amazon: no messenger+ upsell
         // Show banner when not upgraded OR in trial mode
-        drawerBinding.plusBanner.isVisible = !state.upgraded || state.trialState == com.charles.messenger.manager.BillingManager.TrialState.ACTIVE
+        drawerBinding.plusBanner.isVisible = !(com.charles.messenger.BuildConfig.STORE == "amazon") && (!state.upgraded || state.trialState == com.charles.messenger.manager.BillingManager.TrialState.ACTIVE)
         // Show rewards only when not upgraded and not in trial
         drawerBinding.rewards.isVisible = !state.upgraded && state.trialState != com.charles.messenger.manager.BillingManager.TrialState.ACTIVE
 

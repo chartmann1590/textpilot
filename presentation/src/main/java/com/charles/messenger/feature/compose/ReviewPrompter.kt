@@ -22,6 +22,7 @@ private const val SENDS_BEFORE_FIRST_ASK = 4
  */
 object ReviewPrompter {
     fun onMessageSent(activity: Activity) {
+        if (com.charles.messenger.BuildConfig.STORE == "amazon") return // Amazon Appstore build: no Play review prompt
         val prefs = activity.applicationContext.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
         val alreadyRequested = prefs.getBoolean(KEY_REQUESTED, false)
         val count = prefs.getInt(KEY_SEND_COUNT, 0) + 1
