@@ -86,7 +86,8 @@ class BillingManagerImpl @Inject constructor(
             .distinctUntilChanged()
             .doOnNext { upgraded -> analyticsManager.setUserProperty("Upgraded", upgraded) }
 
-    override val upgradeStatus: Observable<Boolean> = Observable.combineLatest(
+    // Direct (non-Play) build: no messenger+ (Play Billing / trial), so never upgraded.
+    override val upgradeStatus: Observable<Boolean> = if (com.charles.messenger.BuildConfig.STORE == "direct") Observable.just(false) else Observable.combineLatest(
             purchasedStatus.startWith(false),
             trialStatus
     ) { purchased, trial ->
@@ -352,6 +353,7 @@ class BillingManagerImpl @Inject constructor(
     }
 
     private suspend fun executeServiceRequest(runnable: suspend () -> Unit) {
+        if (com.charles.messenger.BuildConfig.STORE == "direct") return // Direct (non-Play) build: Play Billing is never connected
         val currentState = billingClientState.first()
         // #region agent log
         com.charles.messenger.util.DebugLogger.log(

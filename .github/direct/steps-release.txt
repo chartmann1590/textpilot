@@ -1,0 +1,49 @@
+launch
+wait 15
+shot 01-default-sms-prompt
+tap (?i)^set as default$
+wait 4
+tap (?i)^set as default$
+wait 3
+taploop (?i)^(allow|while using the app|ok|dismiss|got it)$
+wait 3
+shot 02-after-default
+tap (?i)^skip$
+wait 4
+adclose
+taploop (?i)^(skip|dismiss|ok|got it|not now|later|no thanks)$
+adclose
+shot 03-inbox
+tap (?i)^open navigation drawer$
+wait 3
+shot 04-drawer
+swipeup
+shot 05-drawer-bottom
+tap (?i)^settings$
+wait 4
+adclose
+shot 06-settings
+swipeup
+swipeup
+shot 07-settings-mid
+swipeup
+swipeup
+shot 08-settings-bottom
+back
+wait 3
+adclose
+tap (?i)^open navigation drawer$
+wait 2
+tap (?i)^scheduled$
+wait 4
+adclose
+shot 09-scheduled
+back
+wait 3
+adclose
+tap (?i)^start new conversation$
+wait 4
+shot 10-compose
+back
+wait 2
+shot 11-back

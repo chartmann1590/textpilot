@@ -76,6 +76,7 @@ class Navigator @Inject constructor(
      * one of [main_menu, compose_schedule, settings_night, settings_theme]
      */
     fun showQksmsPlusActivity(source: String) {
+        if (com.charles.messenger.BuildConfig.STORE == "direct") return // Direct (non-Play) build: no messenger+ purchase screen (Play Billing)
         analyticsManager.track("Viewed messenger+", Pair("source", source))
         val intent = Intent(context, PlusActivity::class.java)
         startActivity(intent)
@@ -197,7 +198,7 @@ class Navigator @Inject constructor(
     }
 
     fun showRating() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.charles.messenger"))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(if (com.charles.messenger.BuildConfig.STORE == "direct") "https://charleshartmann.com/apps/" else "market://details?id=com.charles.messenger"))
                 .addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY
                         or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
                         or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
@@ -205,7 +206,7 @@ class Navigator @Inject constructor(
         try {
             startActivityExternal(intent)
         } catch (e: ActivityNotFoundException) {
-            val url = "http://play.google.com/store/apps/details?id=com.charles.messenger"
+            val url = if (com.charles.messenger.BuildConfig.STORE == "direct") "https://charleshartmann.com/apps/" else "http://play.google.com/store/apps/details?id=com.charles.messenger"
             startActivityExternal(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
     }
@@ -214,7 +215,7 @@ class Navigator @Inject constructor(
      * Launch the Play Store and display the listing for another app in the developer's portfolio
      */
     fun installOtherApp(packageId: String) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageId"))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(if (com.charles.messenger.BuildConfig.STORE == "direct") "https://charleshartmann.com/apps/" else "market://details?id=$packageId"))
                 .addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY
                         or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
                         or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
@@ -222,7 +223,7 @@ class Navigator @Inject constructor(
         try {
             startActivityExternal(intent)
         } catch (e: ActivityNotFoundException) {
-            val url = "https://play.google.com/store/apps/details?id=$packageId"
+            val url = if (com.charles.messenger.BuildConfig.STORE == "direct") "https://charleshartmann.com/apps/" else "https://play.google.com/store/apps/details?id=$packageId"
             startActivityExternal(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
     }
@@ -276,7 +277,7 @@ class Navigator @Inject constructor(
         analyticsManager.track("Clicked Invite")
         Intent(Intent.ACTION_SEND)
                 .setType("text/plain")
-                .putExtra(Intent.EXTRA_TEXT, "http://play.google.com/store/apps/details?id=com.charles.messenger")
+                .putExtra(Intent.EXTRA_TEXT, if (com.charles.messenger.BuildConfig.STORE == "direct") "https://charleshartmann.com/apps/" else "http://play.google.com/store/apps/details?id=com.charles.messenger")
                 .let { Intent.createChooser(it, null) }
                 .let(::startActivityExternal)
     }
