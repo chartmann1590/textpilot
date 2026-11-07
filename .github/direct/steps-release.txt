@@ -1,41 +1,46 @@
 launch
-wait 15
+wait 20
 shot 01-default-sms-prompt
 tap (?i)^set as default$
-wait 4
-tap (?i)^set as default$
-wait 3
-taploop (?i)^(allow|while using the app|ok|dismiss|got it)$
-wait 3
-shot 02-after-default
+wait 10
+taploop (?i)^(set as default|allow|while using the app|ok)$
+wait 6
+shot 02-smart-reply-tutorial
 tap (?i)^skip$
-wait 4
+wait 8
 adclose
-taploop (?i)^(skip|dismiss|ok|got it|not now|later|no thanks)$
+wait 3
+taploop (?i)^(dismiss|skip|ok|got it|not now|later|no thanks)$
+wait 5
 adclose
 shot 03-inbox
 tap (?i)^open navigation drawer$
-wait 3
+wait 6
 shot 04-drawer
 swipeup
+wait 2
 shot 05-drawer-bottom
 tap (?i)^settings$
-wait 4
+wait 8
 adclose
+wait 3
 shot 06-settings
 swipeup
 swipeup
+wait 2
 shot 07-settings-mid
 swipeup
 swipeup
+swipeup
+wait 2
 shot 08-settings-bottom
 back
-wait 3
+wait 6
 adclose
 tap (?i)^open navigation drawer$
-wait 2
+wait 5
 tap (?i)^scheduled$
-wait 4
+wait 8
 adclose
 shot 09-scheduled
 back
