@@ -1,54 +1,48 @@
+sh cmd role add-role-holder android.app.role.SMS com.charles.messenger.v2
+sh cmd role get-role-holders android.app.role.SMS
 launch
-wait 20
-shot 01-default-sms-prompt
-tap (?i)^set as default$
-wait 10
-taploop (?i)^(set as default|allow|while using the app|ok)$
-wait 6
-shot 02-smart-reply-tutorial
+wait 25
+shot 01-launch
+tap (?i)^(set as default)$
+wait 12
+shot 02-tutorial
 tap (?i)^skip$
-wait 8
+wait 10
 adclose
 wait 3
-taploop (?i)^(dismiss|skip|ok|got it|not now|later|no thanks)$
+taploop (?i)^(dismiss|skip|ok|got it|not now|later|no thanks|allow)$
 wait 5
 adclose
 shot 03-inbox
 tap (?i)^open navigation drawer$
-wait 6
+wait 8
 shot 04-drawer
 swipeup
-wait 2
+wait 3
 shot 05-drawer-bottom
 tap (?i)^settings$
-wait 8
+wait 12
 adclose
 wait 3
 shot 06-settings
 swipeup
 swipeup
-wait 2
+wait 3
 shot 07-settings-mid
 swipeup
 swipeup
 swipeup
-wait 2
+wait 3
 shot 08-settings-bottom
 back
-wait 6
+wait 10
 adclose
 tap (?i)^open navigation drawer$
-wait 5
-tap (?i)^scheduled$
 wait 8
+tap (?i)^scheduled$
+wait 10
 adclose
 shot 09-scheduled
-back
-wait 3
-adclose
-tap (?i)^start new conversation$
-wait 4
+tap (?i)^compose|new conversation|write
+wait 8
 shot 10-compose
-back
-wait 2
-shot 11-back

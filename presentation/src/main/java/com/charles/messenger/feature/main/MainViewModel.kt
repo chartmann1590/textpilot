@@ -202,7 +202,8 @@ class MainViewModel @Inject constructor(
                 }
 
         // Show changelog
-        if (changelogManager.didUpdate()) {
+        // Direct (non-Play) build: no changelog popup (its notes advertise the Play-only Messenger Plus trial).
+        if (changelogManager.didUpdate() && !(com.charles.messenger.BuildConfig.STORE == "direct")) {
             timber.log.Timber.d("Changelog update detected, last seen: ${prefs.changelogVersion.get()}")
             if (Locale.getDefault().language.startsWith("en")) {
                 GlobalScope.launch(Dispatchers.Main) {
